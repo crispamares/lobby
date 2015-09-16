@@ -5,14 +5,19 @@ var BrowserWindow = require('browser-window');  // Module to create native brows
 require('crash-reporter').start();
 
 var spawn = require('child_process').spawn;
-var server = spawn('circusd', ['memcover.ini']);
-
+var spawnOptions = {cwd: __dirname + '/web/'}
+var server = spawn('python', ['-m', 'SimpleHTTPServer'], spawnOptions);
+server.on('error', function (err) {
+  console.error('Failed to start child process.');
+});
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is GCed.
 var mainWindow = null;
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function() {
+  // Stops the server
+  server.kill();
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform != 'darwin') {
@@ -28,10 +33,10 @@ app.on('ready', function() {
 
   // and load the index.html of the app.
 //  mainWindow.loadUrl('file://' + __dirname + '/index.html');
-  mainWindow.loadUrl('http://localhost:8888');
+  mainWindow.loadUrl('http://localhost:8000');
 
   // Open the devtools.
-  mainWindow.openDevTools();
+  //mainWindow.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {
