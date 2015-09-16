@@ -32,11 +32,11 @@ app.on('ready', function() {
   mainWindow = new BrowserWindow({width: 800, height: 600});
 
   // and load the index.html of the app.
-//  mainWindow.loadUrl('file://' + __dirname + '/index.html');
-  mainWindow.loadUrl('http://localhost:8000');
+  mainWindow.loadUrl('file://' + __dirname + '/web/index.html');
+  // mainWindow.loadUrl('http://localhost:8000');
 
   // Open the devtools.
-  //mainWindow.openDevTools();
+  mainWindow.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {

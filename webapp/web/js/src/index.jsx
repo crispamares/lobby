@@ -1,5 +1,7 @@
 import React from 'react';
 import _ from 'lodash';
+import { Router, Route, Link, IndexRoute } from 'react-router';
+import Loader from './loader';
 
 // ----------------------------------------------------------
 //  Setup indyva's conection
@@ -17,4 +19,32 @@ import _ from 'lodash';
 // var rpc = context.rpc;
 // var hub = context.hub;
 
-React.render( <div> PACOOOOO </div>, document.getElementById('content'));
+
+class App extends React.Component {
+  render() {
+    return (
+      <div className="row">
+        <div className="col-sm-12">
+          {this.props.children}
+        </div>
+      </div>
+    );
+  }
+}
+
+class About extends React.Component {
+  render() {
+    return (
+      <div>Lobby. Created by Juan Morales. Cajal Blue Brain.</div>
+    );
+  }
+}
+
+React.render((
+  <Router>
+    <Route path="/" component={App}>
+      <IndexRoute component={Loader}/>
+      <Route path="about" component={About}/>
+    </Route>
+  </Router>
+), document.getElementById('content'));
