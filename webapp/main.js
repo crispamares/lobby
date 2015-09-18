@@ -6,7 +6,7 @@ require('crash-reporter').start();
 
 var spawn = require('child_process').spawn;
 var spawnOptions = {cwd: __dirname + '/web/'}
-var server = spawn('python', ['-m', 'SimpleHTTPServer'], spawnOptions);
+var server = spawn('python', ['-m', 'SimpleHTTPServer'], spawnOptions); // FIXME: This should be docker
 server.on('error', function (err) {
   console.error('Failed to start child process.');
 });

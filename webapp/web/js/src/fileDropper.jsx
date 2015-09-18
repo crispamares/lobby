@@ -1,9 +1,6 @@
 import React, { PropTypes } from 'react'
 import {Link} from 'react-router';
 import _ from 'lodash';
-import remote from 'remote';
-let fs = remote.require('fs');
-import path from 'path';
 
 export default class Loader extends React.Component {
   constructor(props) {
@@ -14,12 +11,8 @@ export default class Loader extends React.Component {
     e.stopPropagation();
     e.preventDefault();
     let file = e.dataTransfer.files[0];
-    let destination = path.join("/tmp", path.basename(file.path));
-    if (fs.statSync(destination).isFile) {
-      fs.unlinkSync(destination);
-    }
-    fs.symlinkSync( file.path, destination);
     console.log('File you dragged here is', file.path);
+    this.props.onFileDrop(file.path);
   }
   dontHandle(e) {
     e.stopPropagation();

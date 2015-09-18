@@ -66,9 +66,17 @@
 
 	var _reactRouter = __webpack_require__(3);
 
-	var _loader = __webpack_require__(45);
+	var _remote = __webpack_require__(45);
 
-	var _loader2 = _interopRequireDefault(_loader);
+	var _remote2 = _interopRequireDefault(_remote);
+
+	var _path = __webpack_require__(46);
+
+	var _path2 = _interopRequireDefault(_path);
+
+	var _fileDropper = __webpack_require__(47);
+
+	var _fileDropper2 = _interopRequireDefault(_fileDropper);
 
 	// ----------------------------------------------------------
 	//  Setup indyva's conection
@@ -77,6 +85,8 @@
 	var _context = __webpack_require__(48);
 
 	var _context2 = _interopRequireDefault(_context);
+
+	var fs = _remote2['default'].require('fs');
 
 	var context = new _context2['default']('localhost', 'ws', 19000);
 	context.install();
@@ -92,6 +102,8 @@
 
 	var rpc = context.rpc;
 	var hub = context.hub;
+
+	var data = {};
 
 	var App = (function (_React$Component) {
 	  _inherits(App, _React$Component);
@@ -120,27 +132,54 @@
 	  return App;
 	})(_react2['default'].Component);
 
-	var About = (function (_React$Component2) {
-	  _inherits(About, _React$Component2);
+	var Loader = _react2['default'].createClass({
+	  displayName: 'Loader',
 
-	  function About() {
-	    _classCallCheck(this, About);
+	  readTable: function readTable(filePath) {
+	    var _this = this;
 
-	    _get(Object.getPrototypeOf(About.prototype), 'constructor', this).apply(this, arguments);
+	    var destination = _path2['default'].join("/tmp", _path2['default'].basename(filePath));
+	    try {
+	      if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
+	    } catch (e) {}
+	    fs.symlinkSync(filePath, destination);
+
+	    rpc.call("IOSrv.read_csv", ["userTable", destination]).then(function (table) {
+	      return rpc.call("TableSrv.schema", [table]);
+	    }).then(function (schema) {
+	      console.log("SCHEMA", schema); // setState(SCHEMA) or via FALCOR
+	      _this.props.history.pushState(_this.props.history.state, "/editor");
+	    }).otherwise(function (error) {
+	      console.error("puteeeeeeee", error);
+	    });
+	  },
+
+	  render: function render() {
+	    return _react2['default'].createElement(_fileDropper2['default'], { onFileDrop: this.readTable });
+	  }
+	});
+
+	var Editor = (function (_React$Component2) {
+	  _inherits(Editor, _React$Component2);
+
+	  function Editor() {
+	    _classCallCheck(this, Editor);
+
+	    _get(Object.getPrototypeOf(Editor.prototype), 'constructor', this).apply(this, arguments);
 	  }
 
-	  _createClass(About, [{
+	  _createClass(Editor, [{
 	    key: 'render',
 	    value: function render() {
 	      return _react2['default'].createElement(
 	        'div',
 	        null,
-	        'Lobby. Created by Juan Morales. Cajal Blue Brain.'
+	        'Poo'
 	      );
 	    }
 	  }]);
 
-	  return About;
+	  return Editor;
 	})(_react2['default'].Component);
 
 	_react2['default'].render(_react2['default'].createElement(
@@ -149,8 +188,8 @@
 	  _react2['default'].createElement(
 	    _reactRouter.Route,
 	    { path: '/', component: App },
-	    _react2['default'].createElement(_reactRouter.IndexRoute, { component: _loader2['default'] }),
-	    _react2['default'].createElement(_reactRouter.Route, { path: 'about', component: About })
+	    _react2['default'].createElement(_reactRouter.IndexRoute, { component: Loader }),
+	    _react2['default'].createElement(_reactRouter.Route, { path: 'editor', component: Editor })
 	  )
 	), document.getElementById('content'));
 
@@ -3992,6 +4031,18 @@
 
 /***/ },
 /* 45 */
+/***/ function(module, exports) {
+
+	module.exports = require("remote");
+
+/***/ },
+/* 46 */
+/***/ function(module, exports) {
+
+	module.exports = require("path");
+
+/***/ },
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -4020,16 +4071,6 @@
 
 	var _lodash2 = _interopRequireDefault(_lodash);
 
-	var _remote = __webpack_require__(46);
-
-	var _remote2 = _interopRequireDefault(_remote);
-
-	var _path = __webpack_require__(47);
-
-	var _path2 = _interopRequireDefault(_path);
-
-	var fs = _remote2['default'].require('fs');
-
 	var Loader = (function (_React$Component) {
 	  _inherits(Loader, _React$Component);
 
@@ -4046,12 +4087,8 @@
 	      e.stopPropagation();
 	      e.preventDefault();
 	      var file = e.dataTransfer.files[0];
-	      var destination = _path2['default'].join("/tmp", _path2['default'].basename(file.path));
-	      if (fs.statSync(destination).isFile) {
-	        fs.unlinkSync(destination);
-	      }
-	      fs.symlinkSync(file.path, destination);
 	      console.log('File you dragged here is', file.path);
+	      this.props.onFileDrop(file.path);
 	    }
 	  }, {
 	    key: 'dontHandle',
@@ -4104,18 +4141,6 @@
 
 	exports['default'] = Loader;
 	module.exports = exports['default'];
-
-/***/ },
-/* 46 */
-/***/ function(module, exports) {
-
-	module.exports = require("remote");
-
-/***/ },
-/* 47 */
-/***/ function(module, exports) {
-
-	module.exports = require("path");
 
 /***/ },
 /* 48 */
