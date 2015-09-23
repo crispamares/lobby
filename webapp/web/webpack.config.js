@@ -22,6 +22,9 @@ module.exports = {
   },
   resolve: {
     root: [__dirname + '/js/lib/', __dirname + '/js/lib/indyva-js/'],
-    extensions: ['', '.js', '.jsx']
+    extensions: ['', '.js', '.jsx'],
+    alias: {
+      'rx$': 'falcor/node_modules/rx/dist/rx'
+    }
   }
 };
