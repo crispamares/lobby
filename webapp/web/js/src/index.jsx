@@ -4,9 +4,9 @@ import { Router, Route, Link, IndexRoute } from 'react-router';
 import remote from 'remote';
 let fs = remote.require('fs');
 import path from 'path';
-import falcor from "falcor";
 
 import {fillModelFromSchema} from "./storage";
+import Editor from './editor';
 import FileDropper from './fileDropper';
 
 // ----------------------------------------------------------
@@ -22,19 +22,25 @@ context.openSession(session);
 var rpc = context.rpc;
 var hub = context.hub;
 
-var dataSource = new falcor.Model({cache: {}}).asDataSource();
-
-var model = new falcor.Model({source: dataSource});
-
-window.model = dataSource;
+let model = {};
 
 class App extends React.Component {
   render() {
     return (
-      <div className="row">
-        <div className="col-sm-12">
-          {this.props.children}
+      <div>
+        <div className="row">
+          <div className="col-sm-12">
+            {React.cloneElement(this.props.children, {model: model })}
+          </div>
         </div>
+
+        <footer className="footer">
+          <div className="container">
+            <p className="text-muted">
+              <Link to='/'>Lobby.</Link> <span>Created by Juan Morales. Cajal Blue Brain.</span>
+            </p>
+          </div>
+        </footer>
       </div>
     );
   }
@@ -49,12 +55,11 @@ const Loader = React.createClass({
     catch(e) {}
     fs.symlinkSync( filePath, destination);
 
-
     rpc.call("IOSrv.read_csv", ["userTable", destination]).then(
       table => { return rpc.call("TableSrv.schema", [table]) }
     ).then( schema => {
-      fillModelFromSchema(dataSource, schema).then((d) => {console.log("setted", d)}, (e) => {console.error(e)});
-      console.log("SCHEMA", schema); // setState(SCHEMA) or
+      fillModelFromSchema(this.props.model, schema)
+      console.log("SCHEMA", schema, "model: ", this.props.model); // setState(SCHEMA) or
       this.props.history.pushState(this.props.history.state, "/editor");
     })
     .otherwise( error => { console.error("puteeeeeeee", error); });
@@ -67,25 +72,6 @@ const Loader = React.createClass({
   }
 })
 
-const Editor = React.createClass({
-  getInitialState() {
-    return { attributes : {} };
-  },
-  componentDidMount() {
-    model.get('index.name')
-    .subscribe( (data) => { console.log(data); this.setState({attributes: data}) });
-  },
-  render() {
-    return (
-      <pre>
-        {
-          JSON.stringify(this.state.attributes, null, 4)
-          // _.map(_.values(this.state.attributes), (attr, i) => { return (<li key={i}> {attr.name} </li>); } )
-          }
-      </pre>
-    );
-  }
-})
 
 React.render((
   <Router>

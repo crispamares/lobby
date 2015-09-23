@@ -1,3 +1,5 @@
+var webpack = require('webpack');
+
 module.exports = {
   context: __dirname + "/js/src",
   entry: './index.jsx',
@@ -22,9 +24,10 @@ module.exports = {
   },
   resolve: {
     root: [__dirname + '/js/lib/', __dirname + '/js/lib/indyva-js/'],
-    extensions: ['', '.js', '.jsx'],
-    alias: {
-      'rx$': 'falcor/node_modules/rx/dist/rx'
-    }
-  }
+    extensions: ['', '.js', '.jsx']
+  },
+  plugins: [
+    // Fix atom build of react-grid-layout: https://github.com/STRML/react-grid-layout/issues/40
+    new webpack.NormalModuleReplacementPlugin(/\/react\/lib\/cloneWithProps/, '../../react-clonewithprops/index.js'),
+  ],
 };
