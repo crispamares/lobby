@@ -1,0 +1,52 @@
+
+.card {
+    overflow: hidden;
+    background: #F8F8F8;
+    border: 1px solid #E7E7E7;
+    padding: 5px 5px 5px 5px;
+}
+
+.card.react-draggable-dragging {
+  background: none;
+  border-color: #9ECF9E;
+}
+
+.react-grid-placeholder {
+  background: rgba(0, 255, 0, 0.2);;
+}
+
+.card .card-anchor {
+    cursor: all-scroll;
+}
+
+.card .card-header {
+    padding: 0 0px 7px 0px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+}
+
+.card .card-content {
+    overflow-y: auto;
+}
+
+.card .card-close {
+    position:absolute;
+    right: 0px;
+    top: 3px;
+    z-index: 10;
+}
+
+.card .card-menu {
+    position:absolute;
+    right: 27px;
+    top: 3px;
+    z-index: 10;
+}
+
+.card .card-move {
+    position:absolute;
+    left: 0px;
+    top: 3px;
+    z-index: 10;
+}
