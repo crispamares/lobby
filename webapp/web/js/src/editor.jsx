@@ -16,10 +16,10 @@ let hashCode = function(str) {
 
 const Editor = React.createClass({
   getInitialState() {
-    let initialState = {
-      //layout: [],   //	    {x:2, y: 0, w: 5, h: 6, i:"c0", handle:".card-title"},
-    }
+    let expandedByDefault = false;
+    let initialState = {};
     _.extend(initialState, this.props.model);
+    initialState["expanded"] = _.zipObject(initialState.order, _.fill(Array(initialState.order.length), expandedByDefault));
     return initialState;
   },
   orderFromLayout(layout) {
@@ -30,9 +30,18 @@ const Editor = React.createClass({
     .value();
   },
   render() {
+
     let rowHeight = 45;
-    let layout = _.map(this.state.order, (attrName, i) => {
-      return {x:0, y: i, w: 1, h: 1, i:"c"+hashCode(attrName), attr:attrName, handle:".card-anchor"}
+    let expanded = this.state.expanded;
+    let order = this.state.order;
+
+    // Compute the layout from state.order and state.expanded
+    let _lastY = 0;
+    let layout = _.map(order, (attrName, i) => {
+      let height = expanded[attrName] ? 3: 1;
+      _lastY += expanded[attrName] ? 3: 1;
+      let result = {x:0, y: _lastY, w: 1, h: height, i:"c"+hashCode(attrName), attr:attrName, handle:".card-anchor"}
+      return result;
     })
 
     return (
@@ -42,17 +51,24 @@ const Editor = React.createClass({
           cols={1}
           rowHeight={rowHeight}
           useCSSTransforms={true}
-          onLayoutChange={(layout) => {this.setState({"order": this.orderFromLayout(layout)});}}
+          onLayoutChange={(newLayout) => {
+            if (! _.isEqual(order, this.orderFromLayout(newLayout))) {  // Avoids infinite recursion
+              this.setState({"order": this.orderFromLayout(newLayout)});
+            }
+          }}
           onResizeStop={(layout) => {this.setState({"order": this.orderFromLayout(layout)});}}
           >
           {
             this.state.order.map((attrName, i) => {
               return (
                 <div className="card" key={"c"+hashCode(attrName)}>
-                  <div>
-                    <span className="btn btn-xs btn-default card-anchor glyphicon glyphicon-move" aria-hidden="true"></span>
-                    <span> {attrName} </span>
-                  </div>
+                  <Card
+                    attrName={attrName}
+                    expanded={expanded[attrName]}
+                    onHeaderClick={() => {
+                      expanded[attrName] = ! expanded[attrName];
+                      this.setState({"expanded": expanded});
+                    }}/>
                 </div>
               );
             })
@@ -62,5 +78,36 @@ const Editor = React.createClass({
     );
   }
 })
+
+
+class Card extends React.Component {
+  static propTypes = {
+    onHeaderClick: PropTypes.func.isRequired
+  }
+  onAccept () {
+
+  }
+  onCancel () {
+
+  }
+  render () {
+    let attrName = this.props.attrName;
+    let expanded = this.props.expanded;
+    var cx = React.addons.classSet;
+    var contentClasses = cx({
+      'card-content': true,
+      'hidden': ! this.props.expanded
+    });
+    return (
+      <div>
+        <span className="btn btn-xs btn-default card-anchor glyphicon glyphicon-move" aria-hidden="true"></span>
+        <span className="card-header" onClick={(ev) => {this.props.onHeaderClick(ev)}}> {attrName} </span>
+        <div className={contentClasses} >
+          Paco
+        </div>
+      </div>
+    )
+  }
+}
 
 export default Editor;

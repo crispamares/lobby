@@ -24,6 +24,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     position: relative;
+    cursor: pointer;
 }
 
 .card .card-content {
@@ -49,4 +50,5 @@
     left: 0px;
     top: 3px;
     z-index: 10;
+    cursor: move;
 }
