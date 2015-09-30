@@ -114,6 +114,14 @@
 	  }
 
 	  _createClass(App, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      var argv = _remote2['default'].process.argv.slice(2);
+	      if (argv.length !== 0) {
+	        Loader.readTable(model, this.props.history, argv[0]);
+	      }
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2['default'].createElement(
@@ -158,33 +166,43 @@
 	  return App;
 	})(_react2['default'].Component);
 
-	var Loader = _react2['default'].createClass({
-	  displayName: 'Loader',
+	var Loader = (function (_React$Component2) {
+	  _inherits(Loader, _React$Component2);
 
-	  readTable: function readTable(filePath) {
-	    var _this = this;
+	  function Loader() {
+	    _classCallCheck(this, Loader);
 
-	    var destination = _path2['default'].join("/tmp", _path2['default'].basename(filePath));
-	    try {
-	      if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
-	    } catch (e) {}
-	    fs.symlinkSync(filePath, destination);
-
-	    rpc.call("IOSrv.read_csv", ["userTable", destination]).then(function (table) {
-	      return rpc.call("TableSrv.schema", [table]);
-	    }).then(function (schema) {
-	      (0, _storage.fillModelFromSchema)(_this.props.model, schema);
-	      console.log("SCHEMA", schema, "model: ", _this.props.model); // setState(SCHEMA) or
-	      _this.props.history.pushState(_this.props.history.state, "/editor");
-	    }).otherwise(function (error) {
-	      console.error("puteeeeeeee", error);
-	    });
-	  },
-
-	  render: function render() {
-	    return _react2['default'].createElement(_fileDropper2['default'], { onFileDrop: this.readTable });
+	    _get(Object.getPrototypeOf(Loader.prototype), 'constructor', this).apply(this, arguments);
 	  }
-	});
+
+	  _createClass(Loader, [{
+	    key: 'render',
+	    value: function render() {
+	      return _react2['default'].createElement(_fileDropper2['default'], { onFileDrop: Loader.readTable.bind(this, this.props.model, this.props.history) });
+	    }
+	  }], [{
+	    key: 'readTable',
+	    value: function readTable(model, history, filePath) {
+	      var destination = _path2['default'].join("/tmp", _path2['default'].basename(filePath));
+	      try {
+	        if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
+	      } catch (e) {}
+	      fs.symlinkSync(filePath, destination);
+
+	      rpc.call("IOSrv.read_csv", ["userTable", destination]).then(function (table) {
+	        return rpc.call("TableSrv.schema", [table]);
+	      }).then(function (schema) {
+	        (0, _storage.fillModelFromSchema)(model, schema);
+	        console.log("SCHEMA", schema, "model: ", model); // setState(SCHEMA) or
+	        history.pushState(history.state, "/editor");
+	      }).otherwise(function (error) {
+	        console.error("puteeeeeeee", error);
+	      });
+	    }
+	  }]);
+
+	  return Loader;
+	})(_react2['default'].Component);
 
 	_react2['default'].render(_react2['default'].createElement(
 	  _reactRouter.Router,
@@ -4130,7 +4148,7 @@
 	  render: function render() {
 	    var _this = this;
 
-	    var rowHeight = 85;
+	    var rowHeight = 45;
 	    var layout = _lodash2['default'].map(this.state.order, function (attrName, i) {
 	      return { x: 0, y: i, w: 1, h: 1, i: "c" + hashCode(attrName), attr: attrName, handle: ".card-anchor" };
 	    });

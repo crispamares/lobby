@@ -30,7 +30,7 @@ const Editor = React.createClass({
     .value();
   },
   render() {
-    let rowHeight = 85;
+    let rowHeight = 45;
     let layout = _.map(this.state.order, (attrName, i) => {
       return {x:0, y: i, w: 1, h: 1, i:"c"+hashCode(attrName), attr:attrName, handle:".card-anchor"}
     })

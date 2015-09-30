@@ -25,6 +25,12 @@ var hub = context.hub;
 let model = {};
 
 class App extends React.Component {
+  componentWillMount() {
+    let argv = remote.process.argv.slice(2);
+    if (argv.length !== 0) {
+      Loader.readTable(model, this.props.history, argv[0]);
+    }
+  }
   render() {
     return (
       <div>
@@ -46,8 +52,8 @@ class App extends React.Component {
   }
 }
 
-const Loader = React.createClass({
-  readTable (filePath) {
+class Loader extends React.Component {
+  static readTable (model, history, filePath) {
     let destination = path.join("/tmp", path.basename(filePath));
     try {
       if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
@@ -58,19 +64,18 @@ const Loader = React.createClass({
     rpc.call("IOSrv.read_csv", ["userTable", destination]).then(
       table => { return rpc.call("TableSrv.schema", [table]) }
     ).then( schema => {
-      fillModelFromSchema(this.props.model, schema)
-      console.log("SCHEMA", schema, "model: ", this.props.model); // setState(SCHEMA) or
-      this.props.history.pushState(this.props.history.state, "/editor");
+      fillModelFromSchema(model, schema)
+      console.log("SCHEMA", schema, "model: ", model); // setState(SCHEMA) or
+      history.pushState(history.state, "/editor");
     })
     .otherwise( error => { console.error("puteeeeeeee", error); });
-  },
-
+  }
   render () {
     return (
-      <FileDropper onFileDrop={this.readTable}></FileDropper>
+      <FileDropper onFileDrop={Loader.readTable.bind(this, this.props.model, this.props.history)}></FileDropper>
     )
   }
-})
+}
 
 
 React.render((
