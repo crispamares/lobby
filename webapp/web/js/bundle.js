@@ -4195,6 +4195,7 @@
 	            { className: 'card', key: "c" + hashCode(attrName) },
 	            _react2['default'].createElement(Card, {
 	              attrName: attrName,
+	              order: i + 1,
 	              expanded: expanded[attrName],
 	              onHeaderClick: function () {
 	                expanded[attrName] = !expanded[attrName];
@@ -4229,6 +4230,7 @@
 
 	      var attrName = this.props.attrName;
 	      var expanded = this.props.expanded;
+	      var order = this.props.order;
 	      var cx = _react2['default'].addons.classSet;
 	      var contentClasses = cx({
 	        'card-content': true,
@@ -4243,9 +4245,7 @@
 	          { className: 'card-header', onClick: function (ev) {
 	              _this2.props.onHeaderClick(ev);
 	            } },
-	          ' ',
-	          attrName,
-	          ' '
+	          order + ".- " + attrName
 	        ),
 	        _react2['default'].createElement(
 	          'div',
@@ -4257,7 +4257,10 @@
 	  }], [{
 	    key: 'propTypes',
 	    value: {
-	      onHeaderClick: _react.PropTypes.func.isRequired
+	      onHeaderClick: _react.PropTypes.func.isRequired,
+	      attrName: _react.PropTypes.string.isRequired,
+	      order: _react.PropTypes.number.isRequired,
+	      expanded: _react.PropTypes.bool.isRequired
 	    },
 	    enumerable: true
 	  }]);
