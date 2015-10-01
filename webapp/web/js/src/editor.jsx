@@ -1,7 +1,9 @@
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import ReactGridLayout from 'react-grid-layout';
+import {Button} from 'react-bootstrap';
 
+import Card from './card';
 
 let hashCode = function(str) {
   var hash = 0, i, chr, len;
@@ -32,14 +34,16 @@ const Editor = React.createClass({
   render() {
 
     let rowHeight = 45;
+    let expandedRows = 5;
     let expanded = this.state.expanded;
+    let attributes = this.state.attributes;
     let order = this.state.order;
 
     // Compute the layout from state.order and state.expanded
     let _lastY = 0;
     let layout = _.map(order, (attrName, i) => {
-      let height = expanded[attrName] ? 3: 1;
-      _lastY += expanded[attrName] ? 3: 1;
+      let height = expanded[attrName] ? expandedRows : 1;
+      _lastY += expanded[attrName] ? expandedRows : 1;
       let result = {x:0, y: _lastY, w: 1, h: height, i:"c"+hashCode(attrName), attr:attrName, handle:".card-anchor"}
       return result;
     })
@@ -61,9 +65,10 @@ const Editor = React.createClass({
           {
             this.state.order.map((attrName, i) => {
               return (
-                <div className="card" key={"c"+hashCode(attrName)}>
+                <div key={"c"+hashCode(attrName)}>
                   <Card
                     attrName={attrName}
+                    attrType={attributes[attrName]["attribute_type"]}
                     order={i + 1}
                     expanded={expanded[attrName]}
                     onHeaderClick={() => {
@@ -79,42 +84,5 @@ const Editor = React.createClass({
     );
   }
 })
-
-
-class Card extends React.Component {
-  static propTypes = {
-    onHeaderClick: PropTypes.func.isRequired,
-    attrName: PropTypes.string.isRequired,
-    order: PropTypes.number.isRequired,
-    expanded: PropTypes.bool.isRequired,
-  }
-  onAccept () {
-
-  }
-  onCancel () {
-
-  }
-  render () {
-    let attrName = this.props.attrName;
-    let expanded = this.props.expanded;
-    let order = this.props.order;
-    var cx = React.addons.classSet;
-    var contentClasses = cx({
-      'card-content': true,
-      'hidden': ! this.props.expanded
-    });
-    return (
-      <div>
-        <span className="btn btn-xs btn-default card-anchor glyphicon glyphicon-move" aria-hidden="true"></span>
-        <span className="card-header" onClick={(ev) => {this.props.onHeaderClick(ev)}}>
-          { order + ".- " + attrName}
-        </span>
-        <div className={contentClasses} >
-          Paco
-        </div>
-      </div>
-    )
-  }
-}
 
 export default Editor;

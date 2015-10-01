@@ -3,16 +3,19 @@
     overflow: hidden;
     background: #F8F8F8;
     border: 1px solid #E7E7E7;
-    padding: 5px 5px 5px 5px;
+    padding: 5px 5px 5px 35px;
+    position: relative;
+    height: 100%;
+    width: 100%;
 }
 
 .card.react-draggable-dragging {
-  background: none;
-  border-color: #9ECF9E;
+    background: none;
+    border-color: #9ECF9E;
 }
 
 .react-grid-placeholder {
-  background: rgba(0, 255, 0, 0.2);;
+    background: rgba(0, 255, 0, 0.2);;
 }
 
 .card .card-anchor {
@@ -20,15 +23,24 @@
 }
 
 .card .card-header {
-    padding: 0 0px 7px 0px;
+    margin: 0 0px 16px 0px;
+    padding: 0 0px 7px 5px;
     text-overflow: ellipsis;
     white-space: nowrap;
-    position: relative;
     cursor: pointer;
 }
 
+.card.expanded .card-header {
+    border-bottom: solid 1px #E7E7E7;
+}
+
 .card .card-content {
-    overflow-y: auto;
+}
+
+.card .buttons {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
 }
 
 .card .card-close {
@@ -46,9 +58,17 @@
 }
 
 .card .card-move {
-    position:absolute;
-    left: 0px;
-    top: 3px;
     z-index: 10;
     cursor: move;
+    position: absolute;
+    height: 22px;
+    width: 22px;
+    left: 5px;
+    top: 16px;
+    transform: translate(0, -50%);
+    transition: top 0.2s ease-in;
+}
+
+.card.expanded .card-move {
+    top: 50%;
 }
