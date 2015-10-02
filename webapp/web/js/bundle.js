@@ -4155,13 +4155,11 @@
 	    this.state.expanded[attrName] = !this.state.expanded[attrName];
 	    this.setState({ "expanded": this.state.expanded });
 	  },
-	  onCardAccept: function onCardAccept(ev) {
-	    // TODO: Save Changes
-	    this.props.onHeaderClick(ev);
+	  onCardAccept: function onCardAccept(attrName) {
+	    this.toggleCardExpansion(attrName);
 	  },
-	  onCardCancel: function onCardCancel(ev) {
-	    this.setState(this.getInitialState());
-	    this.props.onHeaderClick(ev);
+	  onCardCancel: function onCardCancel(attrName) {
+	    this.toggleCardExpansion(attrName);
 	  },
 	  linkAttribute: function linkAttribute(attrName, key, value) {
 	    this.state['attributes'][attrName][key] = value;
@@ -4218,8 +4216,12 @@
 	              attrType: attrType,
 	              order: i + 1,
 	              expanded: expanded[attrName],
-	              onAccept: _this.onCardAccept,
-	              onCancel: _this.onCardCancel,
+	              onAccept: function () {
+	                _this.onCardAccept(attrName);
+	              },
+	              onCancel: function () {
+	                _this.onCardCancel(attrName);
+	              },
 	              onAttrLabelChanged: function (ev) {
 	                return _this.linkAttribute(attrName, 'label', ev.target.value);
 	              },
@@ -22798,9 +22800,7 @@
 	              props.onAccept(ev);ev.preventDefault();
 	            } },
 	          _react2['default'].createElement(_reactBootstrap.Input, { type: 'text', label: 'Name', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
-	            value: props.attrLabel, onChange: function (ev) {
-	              ev.preventDefault();props.onAttrLabelChanged(ev);
-	            } }),
+	            value: props.attrLabel, onChange: props.onAttrLabelChanged }),
 	          _react2['default'].createElement(
 	            _reactBootstrap.Input,
 	            { type: 'select', label: 'Attribute Type', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',

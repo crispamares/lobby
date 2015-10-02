@@ -35,13 +35,11 @@ const Editor = React.createClass({
     this.state.expanded[attrName] = ! this.state.expanded[attrName];
     this.setState({"expanded": this.state.expanded});
   },
-  onCardAccept (ev) {
-    // TODO: Save Changes
-    this.props.onHeaderClick(ev);
+  onCardAccept (attrName) {
+    this.toggleCardExpansion(attrName);
   },
-  onCardCancel (ev) {
-    this.setState(this.getInitialState());
-    this.props.onHeaderClick(ev);
+  onCardCancel (attrName) {
+    this.toggleCardExpansion(attrName);
   },
   linkAttribute (attrName, key, value) {
     this.state['attributes'][attrName][key] = value;
@@ -91,8 +89,8 @@ const Editor = React.createClass({
                     attrType={attrType}
                     order={i + 1}
                     expanded={expanded[attrName]}
-                    onAccept={this.onCardAccept}
-                    onCancel={this.onCardCancel}
+                    onAccept={() => { this.onCardAccept(attrName)} }
+                    onCancel={() => { this.onCardCancel(attrName)} }
                     onAttrLabelChanged={(ev) => this.linkAttribute(attrName, 'label', ev.target.value)}
                     onAttrTypeChanged={(ev) => this.linkAttribute.bind(this, attrName, 'attribute_type', ev.target.value)}
                     onHeaderClick={() => {this.toggleCardExpansion(attrName)}}/>

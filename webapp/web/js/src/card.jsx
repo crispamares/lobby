@@ -40,7 +40,7 @@ const Card = React.createClass({
 
           <form className="form-horizontal" onSubmit={(ev)=> { props.onAccept(ev);  ev.preventDefault() }}>
             <Input type="text" label="Name" labelClassName="col-xs-2" wrapperClassName="col-xs-10"
-              value={props.attrLabel} onChange={(ev) => { ev.preventDefault(); props.onAttrLabelChanged(ev);}}/>
+              value={props.attrLabel} onChange={props.onAttrLabelChanged}/>
             <Input type="select" label="Attribute Type" labelClassName="col-xs-2" wrapperClassName="col-xs-10"
               value={props.attrType} onChange={props.onAttrTypeChanged}>
               <option value="QUANTITATIVE">Quantitative</option>
