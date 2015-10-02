@@ -31,6 +31,22 @@ const Editor = React.createClass({
     .pluck('attr')
     .value();
   },
+  toggleCardExpansion (attrName) {
+    this.state.expanded[attrName] = ! this.state.expanded[attrName];
+    this.setState({"expanded": this.state.expanded});
+  },
+  onCardAccept (ev) {
+    // TODO: Save Changes
+    this.props.onHeaderClick(ev);
+  },
+  onCardCancel (ev) {
+    this.setState(this.getInitialState());
+    this.props.onHeaderClick(ev);
+  },
+  linkAttribute (attrName, key, value) {
+    this.state['attributes'][attrName][key] = value;
+    this.setState(this.state);
+  },
   render() {
 
     let rowHeight = 45;
@@ -55,26 +71,31 @@ const Editor = React.createClass({
           cols={1}
           rowHeight={rowHeight}
           useCSSTransforms={true}
+          isResizable={false}
           onLayoutChange={(newLayout) => {
-            if (! _.isEqual(order, this.orderFromLayout(newLayout))) {  // Avoids infinite recursion
-              this.setState({"order": this.orderFromLayout(newLayout)});
+            let newOrder = this.orderFromLayout(newLayout);
+            if (! _.isEqual(order, newOrder)) {  // Avoids infinite recursion
+              this.setState({"order": newOrder});
             }
           }}
           onResizeStop={(layout) => {this.setState({"order": this.orderFromLayout(layout)});}}
           >
           {
             this.state.order.map((attrName, i) => {
+              let attrType = attributes[attrName]["attribute_type"];
+              let attrLabel = attributes[attrName]["label"];
               return (
                 <div key={"c"+hashCode(attrName)}>
                   <Card
-                    attrName={attrName}
-                    attrType={attributes[attrName]["attribute_type"]}
+                    attrLabel={attrLabel}
+                    attrType={attrType}
                     order={i + 1}
                     expanded={expanded[attrName]}
-                    onHeaderClick={() => {
-                      expanded[attrName] = ! expanded[attrName];
-                      this.setState({"expanded": expanded});
-                    }}/>
+                    onAccept={this.onCardAccept}
+                    onCancel={this.onCardCancel}
+                    onAttrLabelChanged={(ev) => this.linkAttribute(attrName, 'label', ev.target.value)}
+                    onAttrTypeChanged={(ev) => this.linkAttribute.bind(this, attrName, 'attribute_type', ev.target.value)}
+                    onHeaderClick={() => {this.toggleCardExpansion(attrName)}}/>
                 </div>
               );
             })

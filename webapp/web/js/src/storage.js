@@ -1,7 +1,7 @@
 import _ from "lodash";
 
 export const fillModelFromSchema = function (model, schema) {
-  _.forOwn(schema.attributes, (attr, key) => { attr.name = key;});
+  _.forOwn(schema.attributes, (attr, key) => { attr.name = key; attr.label = key;});
 
   _.extend( model,
     {

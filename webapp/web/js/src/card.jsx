@@ -1,37 +1,24 @@
 import React, { PropTypes } from 'react';
-import { addons } from 'react/addons';
 import _ from 'lodash';
 import {Button, ButtonToolbar, Input} from 'react-bootstrap';
 
-
 const Card = React.createClass({
-  mixins: [addons.LinkedStateMixin],
   PropTypes : {
     onHeaderClick: PropTypes.func.isRequired,
-    attrName: PropTypes.string.isRequired,
+    onAccept: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
+    onAttrLabelChanged: PropTypes.func.isRequired,
+    onAttrTypeChanged: PropTypes.func.isRequired,
+    attrLabel: PropTypes.string.isRequired,
     attrType: PropTypes.string.isRequired,
     order: PropTypes.number.isRequired,
     expanded: PropTypes.bool.isRequired,
   },
-  getInitialState () {
-    return {
-      attrName: this.props.attrName,
-      attrType: this.props.attrType,
-    };
-  },
-  onAccept (ev) {
-    // TODO: Save Changes
-    this.props.onHeaderClick(ev);
-  },
-  onCancel (ev) {
-    this.setState(this.getInitialState());
-    this.props.onHeaderClick(ev);
+  shouldComponentUpdate(nextProps, nextState) {
+    return  ! _.isEqual(nextProps, this.props, (x,y) => { if (_.isFunction(x)) {return true} });
   },
   render () {
-    let attrName = this.state.attrName;
-    let expanded = this.props.expanded;
-    let order = this.props.order;
-    let linkState = this.linkState;
+    let props = this.props;
 
     var cardClasses =  React.addons.classSet({
       'card': true,
@@ -46,14 +33,16 @@ const Card = React.createClass({
         <div className="btn btn-xs btn-default card-anchor card-move glyphicon glyphicon-move" aria-hidden="true"></div>
         <div className="card-header">
           <div className="card-title" onClick={(ev) => {this.props.onHeaderClick(ev)}}>
-            { order + ".- " + attrName}
+            { props.order + ".- " + props.attrLabel}
           </div>
         </div>
         <div className={contentClasses}>
 
-          <form className="form-horizontal" onSubmit={(ev)=> { this.onAccept(ev);  ev.preventDefault() }}>
-            <Input type="text" label="Name" labelClassName="col-xs-2" wrapperClassName="col-xs-10" valueLink={linkState('attrName')}/>
-            <Input type="select" label="Attribute Type" labelClassName="col-xs-2" wrapperClassName="col-xs-10" valueLink={linkState('attrType')}>
+          <form className="form-horizontal" onSubmit={(ev)=> { props.onAccept(ev);  ev.preventDefault() }}>
+            <Input type="text" label="Name" labelClassName="col-xs-2" wrapperClassName="col-xs-10"
+              value={props.attrLabel} onChange={(ev) => { ev.preventDefault(); props.onAttrLabelChanged(ev);}}/>
+            <Input type="select" label="Attribute Type" labelClassName="col-xs-2" wrapperClassName="col-xs-10"
+              value={props.attrType} onChange={props.onAttrTypeChanged}>
               <option value="QUANTITATIVE">Quantitative</option>
               <option value="CATEGORICAL">Categorical</option>
               <option value="ORDINAL">Ordinal</option>
@@ -62,8 +51,8 @@ const Card = React.createClass({
 
           <div className="buttons">
             <ButtonToolbar>
-              <Button bsStyle="default" bsSize="small" onClick={(ev) => {this.onCancel(ev)}}> Cancel </Button>
-              <Button bsStyle="primary" bsSize="small" onClick={(ev) => {this.onAccept(ev)}}>Apply Changes</Button>
+              <Button bsStyle="default" bsSize="small" onClick={(ev) => {props.onCancel(ev)}}> Cancel </Button>
+              <Button bsStyle="primary" bsSize="small" onClick={(ev) => {props.onAccept(ev)}}>Apply Changes</Button>
             </ButtonToolbar>
           </div >
         </div>
