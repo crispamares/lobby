@@ -5,8 +5,6 @@ import {Button, ButtonToolbar, Input} from 'react-bootstrap';
 const Card = React.createClass({
   PropTypes : {
     onHeaderClick: PropTypes.func.isRequired,
-    onAccept: PropTypes.func.isRequired,
-    onCancel: PropTypes.func.isRequired,
     onAttrLabelChanged: PropTypes.func.isRequired,
     onAttrTypeChanged: PropTypes.func.isRequired,
     attrLabel: PropTypes.string.isRequired,
@@ -38,7 +36,7 @@ const Card = React.createClass({
         </div>
         <div className={contentClasses}>
 
-          <form className="form-horizontal" onSubmit={(ev)=> { props.onAccept(ev);  ev.preventDefault() }}>
+          <form className="form-horizontal" onSubmit={(ev)=> { ev.preventDefault() }}>
             <Input type="text" label="Name" labelClassName="col-xs-2" wrapperClassName="col-xs-10"
               value={props.attrLabel} onChange={props.onAttrLabelChanged}/>
             <Input type="select" label="Attribute Type" labelClassName="col-xs-2" wrapperClassName="col-xs-10"
@@ -49,12 +47,6 @@ const Card = React.createClass({
             </Input>
           </form>
 
-          <div className="buttons">
-            <ButtonToolbar>
-              <Button bsStyle="default" bsSize="small" onClick={(ev) => {props.onCancel(ev)}}> Cancel </Button>
-              <Button bsStyle="primary" bsSize="small" onClick={(ev) => {props.onAccept(ev)}}>Apply Changes</Button>
-            </ButtonToolbar>
-          </div >
         </div>
       </div>
     )

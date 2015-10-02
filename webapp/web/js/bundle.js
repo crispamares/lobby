@@ -4155,12 +4155,6 @@
 	    this.state.expanded[attrName] = !this.state.expanded[attrName];
 	    this.setState({ "expanded": this.state.expanded });
 	  },
-	  onCardAccept: function onCardAccept(attrName) {
-	    this.toggleCardExpansion(attrName);
-	  },
-	  onCardCancel: function onCardCancel(attrName) {
-	    this.toggleCardExpansion(attrName);
-	  },
 	  linkAttribute: function linkAttribute(attrName, key, value) {
 	    this.state['attributes'][attrName][key] = value;
 	    this.setState(this.state);
@@ -4216,12 +4210,6 @@
 	              attrType: attrType,
 	              order: i + 1,
 	              expanded: expanded[attrName],
-	              onAccept: function () {
-	                _this.onCardAccept(attrName);
-	              },
-	              onCancel: function () {
-	                _this.onCardCancel(attrName);
-	              },
 	              onAttrLabelChanged: function (ev) {
 	                return _this.linkAttribute(attrName, 'label', ev.target.value);
 	              },
@@ -22747,8 +22735,6 @@
 
 	  PropTypes: {
 	    onHeaderClick: _react.PropTypes.func.isRequired,
-	    onAccept: _react.PropTypes.func.isRequired,
-	    onCancel: _react.PropTypes.func.isRequired,
 	    onAttrLabelChanged: _react.PropTypes.func.isRequired,
 	    onAttrTypeChanged: _react.PropTypes.func.isRequired,
 	    attrLabel: _react.PropTypes.string.isRequired,
@@ -22797,7 +22783,7 @@
 	        _react2['default'].createElement(
 	          'form',
 	          { className: 'form-horizontal', onSubmit: function (ev) {
-	              props.onAccept(ev);ev.preventDefault();
+	              ev.preventDefault();
 	            } },
 	          _react2['default'].createElement(_reactBootstrap.Input, { type: 'text', label: 'Name', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
 	            value: props.attrLabel, onChange: props.onAttrLabelChanged }),
@@ -22819,28 +22805,6 @@
 	              'option',
 	              { value: 'ORDINAL' },
 	              'Ordinal'
-	            )
-	          )
-	        ),
-	        _react2['default'].createElement(
-	          'div',
-	          { className: 'buttons' },
-	          _react2['default'].createElement(
-	            _reactBootstrap.ButtonToolbar,
-	            null,
-	            _react2['default'].createElement(
-	              _reactBootstrap.Button,
-	              { bsStyle: 'default', bsSize: 'small', onClick: function (ev) {
-	                  props.onCancel(ev);
-	                } },
-	              ' Cancel '
-	            ),
-	            _react2['default'].createElement(
-	              _reactBootstrap.Button,
-	              { bsStyle: 'primary', bsSize: 'small', onClick: function (ev) {
-	                  props.onAccept(ev);
-	                } },
-	              'Apply Changes'
 	            )
 	          )
 	        )
