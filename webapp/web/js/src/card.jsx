@@ -28,7 +28,9 @@ const Card = React.createClass({
     });
     return (
       <div className={cardClasses}>
-        <div className="btn btn-xs btn-default card-anchor card-move glyphicon glyphicon-move" aria-hidden="true"></div>
+        <div className="btn btn-xs btn-default card-anchor card-move">
+          <span className="icon glyphicon glyphicon-move"></span>
+        </div>
         <div className="card-header">
           <div className="card-title" onClick={(ev) => {this.props.onHeaderClick(ev)}}>
             { props.order + ".- " + props.attrLabel}

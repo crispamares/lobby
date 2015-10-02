@@ -4122,6 +4122,10 @@
 
 	var _card2 = _interopRequireDefault(_card);
 
+	var _toolbar = __webpack_require__(327);
+
+	var _toolbar2 = _interopRequireDefault(_toolbar);
+
 	var hashCode = function hashCode(str) {
 	  var hash = 0,
 	      i,
@@ -4180,6 +4184,7 @@
 	    return _react2['default'].createElement(
 	      'div',
 	      { className: 'board' },
+	      _react2['default'].createElement(_toolbar2['default'], null),
 	      _react2['default'].createElement(
 	        _reactGridLayout2['default'],
 	        { className: 'layout',
@@ -22765,7 +22770,11 @@
 	    return _react2['default'].createElement(
 	      'div',
 	      { className: cardClasses },
-	      _react2['default'].createElement('div', { className: 'btn btn-xs btn-default card-anchor card-move glyphicon glyphicon-move', 'aria-hidden': 'true' }),
+	      _react2['default'].createElement(
+	        'div',
+	        { className: 'btn btn-xs btn-default card-anchor card-move' },
+	        _react2['default'].createElement('span', { className: 'icon glyphicon glyphicon-move' })
+	      ),
 	      _react2['default'].createElement(
 	        'div',
 	        { className: 'card-header' },
@@ -25940,6 +25949,79 @@
 				};
 				return Hub;
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 327 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactBootstrap = __webpack_require__(69);
+
+	var ToolBar = _react2['default'].createClass({
+	  displayName: 'ToolBar',
+
+	  render: function render() {
+	    return _react2['default'].createElement(
+	      _reactBootstrap.Navbar,
+	      { brand: 'Lobby', fixedTop: true },
+	      _react2['default'].createElement(
+	        _reactBootstrap.Nav,
+	        { navbar: true, right: true },
+	        _react2['default'].createElement(
+	          _reactBootstrap.NavItem,
+	          { eventKey: 1 },
+	          _react2['default'].createElement('span', { className: 'glyphicon glyphicon-backward' }),
+	          ' Undo'
+	        ),
+	        _react2['default'].createElement(
+	          _reactBootstrap.NavItem,
+	          { eventKey: 2 },
+	          'Redo ',
+	          _react2['default'].createElement('span', { className: 'glyphicon glyphicon-forward' })
+	        ),
+	        _react2['default'].createElement(
+	          _reactBootstrap.NavDropdown,
+	          { eventKey: 3, title: 'Dropdown', id: 'nav-brand-dropdown' },
+	          _react2['default'].createElement(
+	            _reactBootstrap.MenuItem,
+	            { eventKey: '1' },
+	            'Action'
+	          ),
+	          _react2['default'].createElement(
+	            _reactBootstrap.MenuItem,
+	            { eventKey: '2' },
+	            'Another action'
+	          ),
+	          _react2['default'].createElement(
+	            _reactBootstrap.MenuItem,
+	            { eventKey: '3' },
+	            'Something else here'
+	          ),
+	          _react2['default'].createElement(_reactBootstrap.MenuItem, { divider: true }),
+	          _react2['default'].createElement(
+	            _reactBootstrap.MenuItem,
+	            { eventKey: '4' },
+	            'Separated link'
+	          )
+	        )
+	      )
+	    );
+	  }
+	});
+
+	exports['default'] = ToolBar;
+	module.exports = exports['default'];
 
 /***/ }
 /******/ ]);

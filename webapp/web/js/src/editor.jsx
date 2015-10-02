@@ -4,6 +4,7 @@ import ReactGridLayout from 'react-grid-layout';
 import {Button} from 'react-bootstrap';
 
 import Card from './card';
+import ToolBar from './toolbar';
 
 let hashCode = function(str) {
   var hash = 0, i, chr, len;
@@ -58,6 +59,9 @@ const Editor = React.createClass({
 
     return (
       <div className="board">
+
+        <ToolBar></ToolBar>
+
         <ReactGridLayout className="layout"
           layout={layout}
           cols={1}
