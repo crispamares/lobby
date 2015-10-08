@@ -70,17 +70,13 @@
 
 	var _remote2 = _interopRequireDefault(_remote);
 
-	var _path = __webpack_require__(46);
-
-	var _path2 = _interopRequireDefault(_path);
-
 	var _editor = __webpack_require__(47);
 
 	var _editor2 = _interopRequireDefault(_editor);
 
-	var _fileDropper = __webpack_require__(48);
+	var _loader = __webpack_require__(349);
 
-	var _fileDropper2 = _interopRequireDefault(_fileDropper);
+	var _loader2 = _interopRequireDefault(_loader);
 
 	var _redux = __webpack_require__(49);
 
@@ -90,8 +86,6 @@
 
 	var _reducers2 = _interopRequireDefault(_reducers);
 
-	var _actions = __webpack_require__(69);
-
 	// ----------------------------------------------------------
 	//  Setup indyva's conection
 	// ----------------------------------------------------------
@@ -100,134 +94,89 @@
 
 	var _context2 = _interopRequireDefault(_context);
 
-	var fs = _remote2['default'].require('fs');
-
-	var context = new _context2['default']('localhost', 'ws', 19000);
+	var config = _remote2['default'].getGlobal('configuration');
+	var context = new _context2['default'](config.indyvaServer, config.indyvaPath, config.indyvaPort);
 	context.install();
 	var session = 's' + String(Math.round(Math.random() * 100000));
 	context.openSession(session);
 
 	var rpc = context.rpc;
-	var hub = context.hub;
+	//var hub = context.hub;
 
+	// ----------------------------------------------------------
+	//  Create the store
+	// ----------------------------------------------------------
 	var store = (0, _redux.createStore)(_reducers2['default']);
 
 	var App = (function (_React$Component) {
-	  _inherits(App, _React$Component);
+	    _inherits(App, _React$Component);
 
-	  function App() {
-	    _classCallCheck(this, App);
+	    function App() {
+	        _classCallCheck(this, App);
 
-	    _get(Object.getPrototypeOf(App.prototype), 'constructor', this).apply(this, arguments);
-	  }
-
-	  _createClass(App, [{
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      var argv = _remote2['default'].process.argv.slice(2);
-	      if (argv.length !== 0) {
-	        Loader.readTable(this.props.history, argv[0]);
-	      }
+	        _get(Object.getPrototypeOf(App.prototype), 'constructor', this).apply(this, arguments);
 	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return _react2['default'].createElement(
-	        'div',
-	        null,
-	        _react2['default'].createElement(
-	          'div',
-	          { className: 'row' },
-	          _react2['default'].createElement(
-	            'div',
-	            { className: 'col-sm-12' },
-	            this.props.children
-	          )
-	        ),
-	        _react2['default'].createElement(
-	          'footer',
-	          { className: 'footer' },
-	          _react2['default'].createElement(
-	            'div',
-	            { className: 'container' },
-	            _react2['default'].createElement(
-	              'p',
-	              { className: 'text-muted' },
-	              _react2['default'].createElement(
-	                _reactRouter.Link,
-	                { to: '/' },
-	                'Lobby.'
-	              ),
-	              ' ',
-	              _react2['default'].createElement(
-	                'span',
+
+	    _createClass(App, [{
+	        key: 'render',
+	        value: function render() {
+	            return _react2['default'].createElement(
+	                'div',
 	                null,
-	                'Created by Juan Morales. Cajal Blue Brain.'
-	              )
-	            )
-	          )
-	        )
-	      );
-	    }
-	  }]);
+	                _react2['default'].createElement(
+	                    'div',
+	                    { className: 'row' },
+	                    _react2['default'].createElement(
+	                        'div',
+	                        { className: 'col-sm-12' },
+	                        this.props.children
+	                    )
+	                ),
+	                _react2['default'].createElement(
+	                    'footer',
+	                    { className: 'footer' },
+	                    _react2['default'].createElement(
+	                        'div',
+	                        { className: 'container' },
+	                        _react2['default'].createElement(
+	                            'p',
+	                            { className: 'text-muted' },
+	                            _react2['default'].createElement(
+	                                _reactRouter.Link,
+	                                { to: '/' },
+	                                'Lobby.'
+	                            ),
+	                            ' ',
+	                            _react2['default'].createElement(
+	                                'span',
+	                                null,
+	                                'Created by Juan Morales. Cajal Blue Brain.'
+	                            )
+	                        )
+	                    )
+	                )
+	            );
+	        }
+	    }]);
 
-	  return App;
-	})(_react2['default'].Component);
-
-	var Loader = (function (_React$Component2) {
-	  _inherits(Loader, _React$Component2);
-
-	  function Loader() {
-	    _classCallCheck(this, Loader);
-
-	    _get(Object.getPrototypeOf(Loader.prototype), 'constructor', this).apply(this, arguments);
-	  }
-
-	  _createClass(Loader, [{
-	    key: 'render',
-	    value: function render() {
-	      return _react2['default'].createElement(_fileDropper2['default'], { onFileDrop: Loader.readTable.bind(this, this.props.history) });
-	    }
-	  }], [{
-	    key: 'readTable',
-	    value: function readTable(history, filePath) {
-	      var destination = _path2['default'].join("/tmp", _path2['default'].basename(filePath));
-	      try {
-	        if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
-	      } catch (e) {}
-	      fs.symlinkSync(filePath, destination);
-
-	      rpc.call("IOSrv.read_csv", ["userTable", destination]).then(function (table) {
-	        return rpc.call("TableSrv.schema", [table]);
-	      }).then(function (schema) {
-	        store.dispatch((0, _actions.fillFromSchema)(schema));
-	        store.dispatch((0, _actions.initCards)(schema.attributes));
-	        console.log("SCHEMA", schema, "store: ", store); // setState(SCHEMA) or
-	        history.pushState(history.state, "/editor");
-	      }).otherwise(function (error) {
-	        console.error("puteeeeeeee", error);
-	      });
-	    }
-	  }]);
-
-	  return Loader;
+	    return App;
 	})(_react2['default'].Component);
 
 	_react2['default'].render(_react2['default'].createElement(
-	  _reactRedux.Provider,
-	  { store: store },
-	  function () {
-	    return _react2['default'].createElement(
-	      _reactRouter.Router,
-	      null,
-	      _react2['default'].createElement(
-	        _reactRouter.Route,
-	        { path: '/', component: App },
-	        _react2['default'].createElement(_reactRouter.IndexRoute, { component: Loader }),
-	        _react2['default'].createElement(_reactRouter.Route, { path: 'editor', component: _editor2['default'] })
-	      )
-	    );
-	  }
+	    _reactRedux.Provider,
+	    { store: store },
+	    function () {
+	        return _react2['default'].createElement(
+	            _reactRouter.Router,
+	            null,
+	            _react2['default'].createElement(
+	                _reactRouter.Route,
+	                { path: '/', component: App },
+	                _react2['default'].createElement(_reactRouter.IndexRoute, { component: _loader2['default'] }),
+	                _react2['default'].createElement(_reactRouter.Route, { path: 'editor', component: _editor2['default'] })
+	            )
+	        );
+	    }
 	), document.getElementById('content'));
 
 /***/ },
@@ -27653,8 +27602,10 @@
 	                    { eventKey: 3, title: 'Dropdown', id: 'nav-brand-dropdown' },
 	                    _react2['default'].createElement(
 	                        _reactBootstrap.MenuItem,
-	                        { eventKey: '1' },
-	                        'Action'
+	                        { eventKey: '1', onSelect: function (ev) {
+	                                console.log("cola");window.location = "http://localhost:8888";
+	                            } },
+	                        'GO GO GO'
 	                    ),
 	                    _react2['default'].createElement(
 	                        _reactBootstrap.MenuItem,
@@ -27679,6 +27630,113 @@
 	});
 
 	exports['default'] = ToolBar;
+	module.exports = exports['default'];
+
+/***/ },
+/* 349 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRedux = __webpack_require__(58);
+
+	var _lodash = __webpack_require__(2);
+
+	var _lodash2 = _interopRequireDefault(_lodash);
+
+	var _remote = __webpack_require__(45);
+
+	var _remote2 = _interopRequireDefault(_remote);
+
+	var _path = __webpack_require__(46);
+
+	var _path2 = _interopRequireDefault(_path);
+
+	var _context = __webpack_require__(71);
+
+	var _context2 = _interopRequireDefault(_context);
+
+	var _fileDropper = __webpack_require__(48);
+
+	var _fileDropper2 = _interopRequireDefault(_fileDropper);
+
+	var _actions = __webpack_require__(69);
+
+	var fs = _remote2['default'].require('fs');
+
+	var config = _remote2['default'].getGlobal('configuration');
+
+	var Loader = (function (_React$Component) {
+	    _inherits(Loader, _React$Component);
+
+	    function Loader(props) {
+	        _classCallCheck(this, Loader);
+
+	        _get(Object.getPrototypeOf(Loader.prototype), 'constructor', this).call(this, props);
+
+	        var argv = _remote2['default'].process.argv.slice(2);
+	        if (argv.length !== 0) {
+	            this.readTable(argv[0]);
+	        }
+	    }
+
+	    _createClass(Loader, [{
+	        key: 'readTable',
+	        value: function readTable(filePath) {
+	            var _props = this.props;
+	            var dispatch = _props.dispatch;
+	            var history = _props.history;
+
+	            var rpc = _context2['default'].instance().rpc;
+	            var destination = _path2['default'].join(config.destinationPath, _path2['default'].basename(filePath));
+
+	            try {
+	                if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
+	            } catch (e) {}
+	            fs.symlinkSync(filePath, destination);
+
+	            rpc.call("IOSrv.read_csv", ["userTable", destination]).then(function (table) {
+	                return rpc.call("TableSrv.schema", [table]);
+	            }).then(function (schema) {
+	                dispatch((0, _actions.fillFromSchema)(schema));
+	                dispatch((0, _actions.initCards)(schema.attributes));
+	                console.log("SCHEMA", schema); // setState(SCHEMA) or
+	                history.pushState(history.state, "/editor");
+	            }).otherwise(function (error) {
+	                console.error("Error while reading the file:", error);
+	            });
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            return _react2['default'].createElement(_fileDropper2['default'], { onFileDrop: this.readTable });
+	        }
+	    }]);
+
+	    return Loader;
+	})(_react2['default'].Component);
+
+	exports['default'] = (0, _reactRedux.connect)(function (state) {
+	    return state;
+	})(Loader);
 	module.exports = exports['default'];
 
 /***/ }

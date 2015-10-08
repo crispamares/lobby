@@ -18,7 +18,9 @@ const ToolBar = React.createClass({
                         <span>Redo</span> <span className="glyphicon glyphicon-forward"></span>
                     </NavItem>
                     <NavDropdown eventKey={3} title="Dropdown" id="nav-brand-dropdown">
-                        <MenuItem eventKey="1">Action</MenuItem>
+                        <MenuItem eventKey="1" onSelect={ (ev) => {console.log("cola"); window.location = "http://localhost:8888" } }>
+                            GO GO GO
+                        </MenuItem>
                         <MenuItem eventKey="2">Another action</MenuItem>
                         <MenuItem eventKey="3">Something else here</MenuItem>
                         <MenuItem divider />

@@ -1,6 +1,16 @@
 var app = require('app');  // Module to control application life.
 var BrowserWindow = require('browser-window');  // Module to create native browser window.
 
+var configuration = {
+	indyvaServer: 'localhost',
+	indyvaPath: 'ws',
+	indyvaPort: 19000,
+	destinationPath: '/tmp'
+};
+
+// So is visible by the render process remote.getGlobal('configuration')
+global.configuration = configuration;
+
 // Report crashes to our server.
 require('crash-reporter').start();
 
