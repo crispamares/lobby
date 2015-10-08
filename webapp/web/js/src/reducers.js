@@ -1,24 +1,28 @@
 import {combineReducers} from 'redux';
-import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE, TOGGLE_CARD_EXPANSION} from './actions';
+import _ from "lodash";
+import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
+    TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS} from './actions';
+
+// {
+//     attributes: {
+//         attrsByName: {},
+//         order: [],
+//         index: ''
+//     }
+// }
 
 function attributes(state = {}, action) {
-    let change = {};
     switch (action.type) {
         case SET_ATTR_LABEL:
-            change[action.attr] = {label: action.label};
-            return Object.assign({}, state, change);
+            return _.assign({}, state, {attrsByName: {[action.attr] : {label: action.label}}});
         case SET_ATTR_TYPE:
-            change[action.attr] = {type: action.type};
-            return Object.assign({}, state, change);
-        default:
-            return state;
-    }
-}
-
-function order(state=[], action) {
-    switch (action.type) {
+            return _.assign({}, state, {attrsByName: {[action.attr] : {label: action.type}}});
         case SET_ORDER:
-            return [...action.order]
+            return _.assign({}, state, {order: [...action.order]});
+        case FILL_FROM_SCHEMA:
+            let attributes = _.cloneDeep(action.schema.attributes);
+            _.forOwn(attributes, (attr, key) => { attr.name = key; attr.label = key;});
+            return _.assign({}, state, {attrsByName: attributes, order: _.keys(attributes), index: action.schema.index});
         default:
             return state;
     }
@@ -27,13 +31,15 @@ function order(state=[], action) {
 function cards(state={}, action) {
     switch (action.type) {
         case TOGGLE_CARD_EXPANSION:
-            let change = {};
-            change[action.cardKey] = ! state[action.cardKey];
-            return Object.assign({}, state, change);
+            return _.assign({}, state, {[action.cardKey] : {expanded: ! state[action.cardKey]['expanded']}});
+        case INIT_CARDS:
+            let expandedByDefault = false;
+            let names = _.keys(action.attributes);
+            return _.zipObject(names, _.fill(Array(names.length), {'expanded': expandedByDefault}));
         default:
             return state;
     }
 }
 
-const editorReducer = combineReducers({attributes, order, cards});
+const editorReducer = combineReducers({attributes, cards});
 export default editorReducer;

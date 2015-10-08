@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import ReactGridLayout from 'react-grid-layout';
 import {Button} from 'react-bootstrap';
+ import { connect } from 'react-redux';
 
 import Card from './card';
 import ToolBar from './toolbar';
@@ -47,6 +48,8 @@ const Editor = React.createClass({
     let expanded = this.state.expanded;
     let attributes = this.state.attributes;
     let order = this.state.order;
+
+    console.log("THE PROPS:", this.props);
 
     // Compute the layout from state.order and state.expanded
     let _lastY = 0;
@@ -100,4 +103,4 @@ const Editor = React.createClass({
   }
 })
 
-export default Editor;
+export default connect((state) => state)(Editor);

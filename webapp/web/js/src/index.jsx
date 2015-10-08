@@ -10,7 +10,9 @@ import Editor from './editor';
 import FileDropper from './fileDropper';
 
 import { createStore } from 'redux';
+import { Provider } from 'react-redux';
 import editorReducer from './reducers';
+import {fillFromSchema, initCards} from './actions';
 let store = createStore(editorReducer);
 
 // ----------------------------------------------------------
@@ -69,6 +71,8 @@ class Loader extends React.Component {
       table => { return rpc.call("TableSrv.schema", [table]) }
     ).then( schema => {
       fillModelFromSchema(model, schema)
+      store.dispatch(fillFromSchema(schema));
+      store.dispatch(initCards(schema.attributes));
       console.log("SCHEMA", schema, "model: ", model); // setState(SCHEMA) or
       history.pushState(history.state, "/editor");
     })
@@ -83,10 +87,14 @@ class Loader extends React.Component {
 
 
 React.render((
-  <Router>
-    <Route path="/" component={App}>
-      <IndexRoute component={Loader}/>
-      <Route path="editor" component={Editor}/>
-    </Route>
-  </Router>
+    <Provider store={store}>
+        {() =>
+            <Router>
+                <Route path="/" component={App}>
+                    <IndexRoute component={Loader}/>
+                    <Route path="editor" component={Editor}/>
+                </Route>
+            </Router>
+        }
+    </Provider>
 ), document.getElementById('content'));
