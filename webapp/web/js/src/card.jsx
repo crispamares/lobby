@@ -31,10 +31,11 @@ const Card = React.createClass({
         <div className="btn btn-xs btn-default card-anchor card-move">
           <span className="icon glyphicon glyphicon-move"></span>
         </div>
-        <div className="card-header">
-          <div className="card-title" onClick={(ev) => {this.props.onHeaderClick(ev)}}>
+        <div className="card-header" onClick={(ev) => {this.props.onHeaderClick(ev)}}>
+          <span className="card-title">
             { props.order + ".- " + props.attrLabel}
-          </div>
+          </span>
+          <span className="pull-right text-muted"> { _.startCase(props.attrType.toLowerCase()) }  </span>
         </div>
         <div className={contentClasses}>
 

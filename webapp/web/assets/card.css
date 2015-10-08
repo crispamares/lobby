@@ -24,7 +24,7 @@
 
 .card .card-header {
     margin: 0 0px 16px 0px;
-    padding: 0 0px 7px 5px;
+    padding: 0 5px 7px 5px;
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: pointer;

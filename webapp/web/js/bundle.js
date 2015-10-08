@@ -27539,13 +27539,20 @@
 	      ),
 	      _react2['default'].createElement(
 	        'div',
-	        { className: 'card-header' },
+	        { className: 'card-header', onClick: function (ev) {
+	            _this.props.onHeaderClick(ev);
+	          } },
 	        _react2['default'].createElement(
-	          'div',
-	          { className: 'card-title', onClick: function (ev) {
-	              _this.props.onHeaderClick(ev);
-	            } },
+	          'span',
+	          { className: 'card-title' },
 	          props.order + ".- " + props.attrLabel
+	        ),
+	        _react2['default'].createElement(
+	          'span',
+	          { className: 'pull-right text-muted' },
+	          ' ',
+	          _lodash2['default'].startCase(props.attrType.toLowerCase()),
+	          '  '
 	        )
 	      ),
 	      _react2['default'].createElement(
