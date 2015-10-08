@@ -19,11 +19,11 @@ export function initCards(attributes) {
 }
 
 export function setAttrLabel(attr, label) {
-    return {label: SET_ATTR_LABEL, attr, label};
+    return {type: SET_ATTR_LABEL, attr, label};
 }
 
 export function setAttrType(attr, type) {
-    return {type: SET_ATTR_TYPE, attr, type};
+    return {type: SET_ATTR_TYPE, attr, attrType: type};
 }
 
 export function fillFromSchema(schema) {

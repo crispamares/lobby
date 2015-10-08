@@ -2,8 +2,10 @@ import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import ReactGridLayout from 'react-grid-layout';
 import {Button} from 'react-bootstrap';
- import { connect } from 'react-redux';
+import { connect } from 'react-redux';
+import { ActionCreators } from 'redux-undo';
 
+import {setOrder, toggleCardExpansion, setAttrLabel, setAttrType} from './actions';
 import Card from './card';
 import ToolBar from './toolbar';
 
@@ -19,13 +21,6 @@ let hashCode = function(str) {
 };
 
 const Editor = React.createClass({
-  getInitialState() {
-    let expandedByDefault = false;
-    let initialState = {};
-    _.extend(initialState, this.props.model);
-    initialState["expanded"] = _.zipObject(initialState.order, _.fill(Array(initialState.order.length), expandedByDefault));
-    return initialState;
-  },
   orderFromLayout(layout) {
     return _.chain(layout)
     .map( (l) => { return {y: l.y, attr: l.attr} })
@@ -33,74 +28,69 @@ const Editor = React.createClass({
     .pluck('attr')
     .value();
   },
-  toggleCardExpansion (attrName) {
-    this.state.expanded[attrName] = ! this.state.expanded[attrName];
-    this.setState({"expanded": this.state.expanded});
-  },
-  linkAttribute (attrName, key, value) {
-    this.state['attributes'][attrName][key] = value;
-    this.setState(this.state);
-  },
   render() {
 
-    let rowHeight = 45;
-    let expandedRows = 5;
-    let expanded = this.state.expanded;
-    let attributes = this.state.attributes;
-    let order = this.state.order;
-
-    console.log("THE PROPS:", this.props);
+    const rowHeight = 45;
+    const expandedRows = 5;
+    const dispatch = this.props.dispatch;
+    const cards = this.props.cards.present;
+    const attributes = this.props.attributes.present.attrsByName;
+    const order = this.props.attributes.present.order;
 
     // Compute the layout from state.order and state.expanded
     let _lastY = 0;
     let layout = _.map(order, (attrName, i) => {
-      let height = expanded[attrName] ? expandedRows : 1;
-      _lastY += expanded[attrName] ? expandedRows : 1;
-      let result = {x:0, y: _lastY, w: 1, h: height, i:"c"+hashCode(attrName), attr:attrName, handle:".card-anchor"}
-      return result;
+        let height = cards[attrName].expanded ? expandedRows : 1;
+        _lastY += cards[attrName].expanded ? expandedRows : 1;
+        let result = {x:0, y: _lastY, w: 1, h: height, i:"c"+hashCode(attrName), attr:attrName, handle:".card-anchor"}
+        return result;
     })
 
     return (
-      <div className="board">
+        <div className="board">
 
-        <ToolBar></ToolBar>
+            <ToolBar
+                onUndoClick={() => dispatch(ActionCreators.undo()) }
+                onRedoClick={() => dispatch(ActionCreators.redo()) }
+                >
+            </ToolBar>
 
-        <ReactGridLayout className="layout"
-          layout={layout}
-          cols={1}
-          rowHeight={rowHeight}
-          useCSSTransforms={true}
-          isResizable={false}
-          onLayoutChange={(newLayout) => {
-            let newOrder = this.orderFromLayout(newLayout);
-            if (! _.isEqual(order, newOrder)) {  // Avoids infinite recursion
-              this.setState({"order": newOrder});
-            }
-          }}
-          onResizeStop={(layout) => {this.setState({"order": this.orderFromLayout(layout)});}}
-          >
-          {
-            this.state.order.map((attrName, i) => {
-              let attrType = attributes[attrName]["attribute_type"];
-              let attrLabel = attributes[attrName]["label"];
-              return (
-                <div key={"c"+hashCode(attrName)}>
-                  <Card
-                    attrLabel={attrLabel}
-                    attrType={attrType}
-                    order={i + 1}
-                    expanded={expanded[attrName]}
-                    onAttrLabelChanged={(ev) => this.linkAttribute(attrName, 'label', ev.target.value)}
-                    onAttrTypeChanged={(ev) => this.linkAttribute.bind(this, attrName, 'attribute_type', ev.target.value)}
-                    onHeaderClick={() => {this.toggleCardExpansion(attrName)}}/>
-                </div>
-              );
-            })
-          }
-        </ReactGridLayout>
-      </div>
+            <ReactGridLayout className="layout"
+                layout={layout}
+                cols={1}
+                rowHeight={rowHeight}
+                useCSSTransforms={true}
+                isResizable={false}
+                onLayoutChange={(newLayout) => {
+                    let newOrder = this.orderFromLayout(newLayout);
+                    if (! _.isEqual(order, newOrder)) {  // Avoids infinite recursion
+                        dispatch(setOrder(newOrder));
+                    }
+                }}
+                onResizeStop={(layout) => dispatch(setOrder( this.orderFromLayout(layout) )) }
+                >
+                {
+                    order.map((attrName, i) => {
+                        let attrType = attributes[attrName]["attribute_type"];
+                        let attrLabel = attributes[attrName]["label"];
+                        return (
+                            <div key={"c"+hashCode(attrName)}>
+                                <Card
+                                    attrLabel={attrLabel}
+                                    attrType={attrType}
+                                    order={i + 1}
+                                    expanded={cards[attrName].expanded}
+                                    onAttrLabelChanged={(ev) => dispatch(setAttrLabel(attrName, ev.target.value))}
+                                    onAttrTypeChanged={(ev) => dispatch(setAttrType(attrName, ev.target.value))}
+                                    onHeaderClick={() => dispatch(toggleCardExpansion(attrName)) }/>
+                            </div>
+                        );
+                    })
+                }
+            </ReactGridLayout>
+        </div>
     );
-  }
+}
 })
 
 export default connect((state) => state)(Editor);

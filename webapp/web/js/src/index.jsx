@@ -5,7 +5,6 @@ import remote from 'remote';
 let fs = remote.require('fs');
 import path from 'path';
 
-import {fillModelFromSchema} from "./storage";
 import Editor from './editor';
 import FileDropper from './fileDropper';
 
@@ -13,7 +12,6 @@ import { createStore } from 'redux';
 import { Provider } from 'react-redux';
 import editorReducer from './reducers';
 import {fillFromSchema, initCards} from './actions';
-let store = createStore(editorReducer);
 
 // ----------------------------------------------------------
 //  Setup indyva's conection
@@ -28,13 +26,13 @@ context.openSession(session);
 var rpc = context.rpc;
 var hub = context.hub;
 
-let model = {};
+let store = createStore(editorReducer);
 
 class App extends React.Component {
   componentWillMount() {
     let argv = remote.process.argv.slice(2);
     if (argv.length !== 0) {
-      Loader.readTable(model, this.props.history, argv[0]);
+      Loader.readTable(this.props.history, argv[0]);
     }
   }
   render() {
@@ -42,7 +40,7 @@ class App extends React.Component {
       <div>
         <div className="row">
           <div className="col-sm-12">
-            {React.cloneElement(this.props.children, {model: model })}
+            { this.props.children }
           </div>
         </div>
 
@@ -59,7 +57,7 @@ class App extends React.Component {
 }
 
 class Loader extends React.Component {
-  static readTable (model, history, filePath) {
+  static readTable (history, filePath) {
     let destination = path.join("/tmp", path.basename(filePath));
     try {
       if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
@@ -70,17 +68,16 @@ class Loader extends React.Component {
     rpc.call("IOSrv.read_csv", ["userTable", destination]).then(
       table => { return rpc.call("TableSrv.schema", [table]) }
     ).then( schema => {
-      fillModelFromSchema(model, schema)
       store.dispatch(fillFromSchema(schema));
       store.dispatch(initCards(schema.attributes));
-      console.log("SCHEMA", schema, "model: ", model); // setState(SCHEMA) or
+      console.log("SCHEMA", schema, "store: ", store); // setState(SCHEMA) or
       history.pushState(history.state, "/editor");
     })
     .otherwise( error => { console.error("puteeeeeeee", error); });
   }
   render () {
     return (
-      <FileDropper onFileDrop={Loader.readTable.bind(this, this.props.model, this.props.history)}></FileDropper>
+      <FileDropper onFileDrop={Loader.readTable.bind(this, this.props.history)}></FileDropper>
     )
   }
 }

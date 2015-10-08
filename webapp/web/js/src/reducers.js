@@ -2,6 +2,7 @@ import {combineReducers} from 'redux';
 import _ from "lodash";
 import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
     TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS} from './actions';
+import undoable, {excludeAction} from 'redux-undo';
 
 // {
 //     attributes: {
@@ -14,9 +15,9 @@ import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
 function attributes(state = {}, action) {
     switch (action.type) {
         case SET_ATTR_LABEL:
-            return _.assign({}, state, {attrsByName: {[action.attr] : {label: action.label}}});
+            return _.merge({}, state, {attrsByName: {[action.attr] : {label: action.label}}});
         case SET_ATTR_TYPE:
-            return _.assign({}, state, {attrsByName: {[action.attr] : {label: action.type}}});
+            return _.merge({}, state, {attrsByName: {[action.attr] : {attribute_type: action.attrType}}});
         case SET_ORDER:
             return _.assign({}, state, {order: [...action.order]});
         case FILL_FROM_SCHEMA:
@@ -41,5 +42,8 @@ function cards(state={}, action) {
     }
 }
 
-const editorReducer = combineReducers({attributes, cards});
+const editorReducer = combineReducers({
+    attributes: undoable(attributes, {filter: excludeAction(SET_ATTR_LABEL)}),
+    cards: undoable(cards)
+});
 export default editorReducer;
