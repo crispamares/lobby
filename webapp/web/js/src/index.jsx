@@ -9,6 +9,10 @@ import {fillModelFromSchema} from "./storage";
 import Editor from './editor';
 import FileDropper from './fileDropper';
 
+import { createStore } from 'redux';
+import editorReducer from './reducers';
+let store = createStore(editorReducer);
+
 // ----------------------------------------------------------
 //  Setup indyva's conection
 // ----------------------------------------------------------
