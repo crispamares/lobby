@@ -30,7 +30,7 @@ export default class Loader extends React.Component {
         onDragLeave={ e => {this.setState({onTop: false}); this.dontHandle(e)} }
         onDragEnd={ e => {this.setState({onTop: false}); this.dontHandle(e)} }
         onDrop={ e => {this.onFileDrop(e)} }>
-        <span> Drop here a CSV file <Link to="/about"> about </Link> </span>
+        <span> Drop here a CSV file </span>
       </div>
     );
   }

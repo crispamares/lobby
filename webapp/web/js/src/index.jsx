@@ -5,6 +5,7 @@ import remote from 'remote';
 
 import Editor from './editor';
 import Loader from './loader';
+import Launcher from './launcher';
 
 import { createStore } from 'redux';
 import { Provider } from 'react-redux';
@@ -59,6 +60,7 @@ React.render((
                 <Route path="/" component={App}>
                     <IndexRoute component={Loader}/>
                     <Route path="editor" component={Editor}/>
+                    <Route path="launch" component={Launcher}/>
                 </Route>
             </Router>
         }

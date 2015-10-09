@@ -5,7 +5,8 @@ var configuration = {
 	indyvaServer: 'localhost',
 	indyvaPath: 'ws',
 	indyvaPort: 19000,
-	destinationPath: '/tmp'
+	destinationPath: '/tmp',
+	afterLobbyAppUrl: 'http://localhost:8888'
 };
 
 // So is visible by the render process remote.getGlobal('configuration')

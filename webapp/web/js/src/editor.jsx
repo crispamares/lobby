@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
+import remote from 'remote';
 import ReactGridLayout from 'react-grid-layout';
 import {Button} from 'react-bootstrap';
 import { connect } from 'react-redux';
@@ -52,6 +53,8 @@ const Editor = React.createClass({
             <ToolBar
                 onUndoClick={() => dispatch(ActionCreators.undo()) }
                 onRedoClick={() => dispatch(ActionCreators.redo()) }
+                startAnalysisEnabled={true}
+                onStartAnalysisClick={() => { this.props.history.pushState(this.props.history.state, "/launch")} }
                 >
             </ToolBar>
 
