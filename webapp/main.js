@@ -44,7 +44,7 @@ app.on('ready', function() {
 
   // and load the index.html of the app.
   mainWindow.loadUrl('file://' + __dirname + '/web/index.html');
-  // mainWindow.loadUrl('http://localhost:8000');
+  // mainWindow.loadUrl('http://localhost:8000'); 
 
   // Open the devtools.
   mainWindow.openDevTools();

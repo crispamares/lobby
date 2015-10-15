@@ -31,7 +31,7 @@ class Loader extends React.Component {
         catch(e) {}
         fs.symlinkSync( filePath, destination);
 
-        rpc.call("IOSrv.read_csv", ["userTable", destination]).then(
+        rpc.call("IOSrv.read_csv", ["mainTable", destination]).then(
             table => { return rpc.call("TableSrv.schema", [table]) }
         ).then( schema => {
             dispatch(fillFromSchema(schema));

@@ -78,15 +78,19 @@
 
 	var _loader2 = _interopRequireDefault(_loader);
 
-	var _launcher = __webpack_require__(350);
+	var _launcher = __webpack_require__(349);
 
 	var _launcher2 = _interopRequireDefault(_launcher);
 
 	var _redux = __webpack_require__(307);
 
+	var _reduxThunk = __webpack_require__(351);
+
+	var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
+
 	var _reactRedux = __webpack_require__(299);
 
-	var _reducers = __webpack_require__(349);
+	var _reducers = __webpack_require__(352);
 
 	var _reducers2 = _interopRequireDefault(_reducers);
 
@@ -110,6 +114,7 @@
 	// ----------------------------------------------------------
 	//  Create the store
 	// ----------------------------------------------------------
+	var createStoreWithMiddleware = (0, _redux.applyMiddleware)(_reduxThunk2['default'])(_redux.createStore);
 	var store = (0, _redux.createStore)(_reducers2['default']);
 
 	var App = (function (_React$Component) {
@@ -24511,7 +24516,7 @@
 	            } catch (e) {}
 	            fs.symlinkSync(filePath, destination);
 
-	            rpc.call("IOSrv.read_csv", ["userTable", destination]).then(function (table) {
+	            rpc.call("IOSrv.read_csv", ["mainTable", destination]).then(function (table) {
 	                return rpc.call("TableSrv.schema", [table]);
 	            }).then(function (schema) {
 	                dispatch((0, _actions.fillFromSchema)(schema));
@@ -27672,85 +27677,6 @@
 	    value: true
 	});
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	var _redux = __webpack_require__(307);
-
-	var _lodash = __webpack_require__(2);
-
-	var _lodash2 = _interopRequireDefault(_lodash);
-
-	var _actions = __webpack_require__(319);
-
-	var _reduxUndo = __webpack_require__(318);
-
-	var _reduxUndo2 = _interopRequireDefault(_reduxUndo);
-
-	// {
-	//     attributes: {
-	//         attrsByName: {},
-	//         order: [],
-	//         index: ''
-	//     }
-	// }
-
-	function attributes(state, action) {
-	    if (state === undefined) state = {};
-
-	    switch (action.type) {
-	        case _actions.SET_ATTR_LABEL:
-	            return _lodash2['default'].merge({}, state, { attrsByName: _defineProperty({}, action.attr, { label: action.label }) });
-	        case _actions.SET_ATTR_TYPE:
-	            return _lodash2['default'].merge({}, state, { attrsByName: _defineProperty({}, action.attr, { attribute_type: action.attrType }) });
-	        case _actions.SET_ORDER:
-	            return _lodash2['default'].assign({}, state, { order: [].concat(_toConsumableArray(action.order)) });
-	        case _actions.FILL_FROM_SCHEMA:
-	            var attributes = _lodash2['default'].cloneDeep(action.schema.attributes);
-	            _lodash2['default'].forOwn(attributes, function (attr, key) {
-	                attr.name = key;attr.label = key;
-	            });
-	            return _lodash2['default'].assign({}, state, { attrsByName: attributes, order: _lodash2['default'].keys(attributes), index: action.schema.index });
-	        default:
-	            return state;
-	    }
-	}
-
-	function cards(state, action) {
-	    if (state === undefined) state = {};
-
-	    switch (action.type) {
-	        case _actions.TOGGLE_CARD_EXPANSION:
-	            return _lodash2['default'].assign({}, state, _defineProperty({}, action.cardKey, { expanded: !state[action.cardKey]['expanded'] }));
-	        case _actions.INIT_CARDS:
-	            var expandedByDefault = false;
-	            var names = _lodash2['default'].keys(action.attributes);
-	            return _lodash2['default'].zipObject(names, _lodash2['default'].fill(Array(names.length), { 'expanded': expandedByDefault }));
-	        default:
-	            return state;
-	    }
-	}
-
-	var editorReducer = (0, _redux.combineReducers)({
-	    attributes: (0, _reduxUndo2['default'])(attributes, { filter: (0, _reduxUndo.excludeAction)(_actions.SET_ATTR_LABEL) }),
-	    cards: (0, _reduxUndo2['default'])(cards)
-	});
-	exports['default'] = editorReducer;
-	module.exports = exports['default'];
-
-/***/ },
-/* 350 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	    value: true
-	});
-
 	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
@@ -27771,7 +27697,7 @@
 
 	var _reactBootstrap = __webpack_require__(67);
 
-	var _testedListItem = __webpack_require__(351);
+	var _testedListItem = __webpack_require__(350);
 
 	var _testedListItem2 = _interopRequireDefault(_testedListItem);
 
@@ -27833,7 +27759,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 351 */
+/* 350 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27905,6 +27831,107 @@
 	})(_react2['default'].Component);
 
 	exports['default'] = TestedListItem;
+	module.exports = exports['default'];
+
+/***/ },
+/* 351 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.__esModule = true;
+	exports['default'] = thunkMiddleware;
+
+	function thunkMiddleware(_ref) {
+	  var dispatch = _ref.dispatch;
+	  var getState = _ref.getState;
+
+	  return function (next) {
+	    return function (action) {
+	      return typeof action === 'function' ? action(dispatch, getState) : next(action);
+	    };
+	  };
+	}
+
+	module.exports = exports['default'];
+
+/***/ },
+/* 352 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	var _redux = __webpack_require__(307);
+
+	var _lodash = __webpack_require__(2);
+
+	var _lodash2 = _interopRequireDefault(_lodash);
+
+	var _actions = __webpack_require__(319);
+
+	var _reduxUndo = __webpack_require__(318);
+
+	var _reduxUndo2 = _interopRequireDefault(_reduxUndo);
+
+	// {
+	//     attributes: {
+	//         attrsByName: {},
+	//         order: [],
+	//         index: ''
+	//     }
+	// }
+
+	function attributes(state, action) {
+	    if (state === undefined) state = {};
+
+	    switch (action.type) {
+	        case _actions.SET_ATTR_LABEL:
+	            return _lodash2['default'].merge({}, state, { attrsByName: _defineProperty({}, action.attr, { label: action.label }) });
+	        case _actions.SET_ATTR_TYPE:
+	            return _lodash2['default'].merge({}, state, { attrsByName: _defineProperty({}, action.attr, { attribute_type: action.attrType }) });
+	        case _actions.SET_ORDER:
+	            return _lodash2['default'].assign({}, state, { order: [].concat(_toConsumableArray(action.order)) });
+	        case _actions.FILL_FROM_SCHEMA:
+	            var attributes = _lodash2['default'].cloneDeep(action.schema.attributes);
+	            _lodash2['default'].forOwn(attributes, function (attr, key) {
+	                attr.name = key;attr.label = key;
+	            });
+	            return _lodash2['default'].assign({}, state, { attrsByName: attributes, order: _lodash2['default'].keys(attributes), index: action.schema.index });
+	        default:
+	            return state;
+	    }
+	}
+
+	function cards(state, action) {
+	    if (state === undefined) state = {};
+
+	    switch (action.type) {
+	        case _actions.TOGGLE_CARD_EXPANSION:
+	            return _lodash2['default'].assign({}, state, _defineProperty({}, action.cardKey, { expanded: !state[action.cardKey]['expanded'] }));
+	        case _actions.INIT_CARDS:
+	            var expandedByDefault = false;
+	            var names = _lodash2['default'].keys(action.attributes);
+	            return _lodash2['default'].zipObject(names, _lodash2['default'].fill(Array(names.length), { 'expanded': expandedByDefault }));
+	        default:
+	            return state;
+	    }
+	}
+
+	var editorReducer = (0, _redux.combineReducers)({
+	    attributes: (0, _reduxUndo2['default'])(attributes, { filter: (0, _reduxUndo.excludeAction)(_actions.SET_ATTR_LABEL) }),
+	    cards: (0, _reduxUndo2['default'])(cards)
+	});
+	exports['default'] = editorReducer;
 	module.exports = exports['default'];
 
 /***/ }

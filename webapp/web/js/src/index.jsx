@@ -7,7 +7,8 @@ import Editor from './editor';
 import Loader from './loader';
 import Launcher from './launcher';
 
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
 import { Provider } from 'react-redux';
 import editorReducer from './reducers';
 
@@ -28,6 +29,7 @@ var rpc = context.rpc;
 // ----------------------------------------------------------
 //  Create the store
 // ----------------------------------------------------------
+const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
 let store = createStore(editorReducer);
 
 class App extends React.Component {
