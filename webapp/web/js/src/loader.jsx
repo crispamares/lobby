@@ -43,7 +43,7 @@ class Loader extends React.Component {
     }
     render () {
         return (
-            <FileDropper onFileDrop={this.readTable}></FileDropper>
+            <FileDropper onFileDrop={(filePath) => {this.readTable(filePath);} }></FileDropper>
         )
     }
 }
