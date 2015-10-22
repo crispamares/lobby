@@ -7,15 +7,15 @@ class TestedListItem extends React.Component {
     }
     render () {
         let icon = "glyphicon glyphicon-";
-        let textStyle = "";
+        let textStyle = null;
         switch (this.props.testingState) {
             case "success":
                 icon += "ok-circle";
-                textStyle += "success";
+                textStyle = "success";
                 break;
             case "error":
                 icon += "ban-circle";
-                textStyle += "danger"
+                textStyle = "danger"
                 break;
             case "waiting":
                 icon += "time";
