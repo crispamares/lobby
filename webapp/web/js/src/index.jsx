@@ -30,7 +30,7 @@ let hub = context.hub;
 //  Create the store
 // ----------------------------------------------------------
 const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
-let store = createStore(editorReducer, {tableName: 'mainTable'});
+let store = createStoreWithMiddleware(editorReducer, {table: {tableName: 'mainTable'}});
 window.store = store;
 
 class App extends React.Component {

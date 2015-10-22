@@ -21,7 +21,9 @@ class TestedListItem extends React.Component {
                 icon += "time";
                 break;
             default:
-                console.error("This testingState is not correct:", this.props.testingState);
+                icon = "";
+                textStyle = null;
+                console.warn("This testingState is not correct:", this.props.testingState);
         }
         return (
             <ListGroupItem bsStyle={textStyle}>

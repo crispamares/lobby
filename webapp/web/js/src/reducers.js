@@ -1,7 +1,10 @@
 import {combineReducers} from 'redux';
 import _ from "lodash";
 import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
-    TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS} from './actions';
+    TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS,
+    RENAME_COLUMNS_REQUEST, RENAME_COLUMNS_FAILURE, RENAME_COLUMNS_SUCCESS,
+    CREATE_NEW_TABLE_REQUEST, CREATE_NEW_TABLE_FAILURE, CREATE_NEW_TABLE_SUCCESS}
+    from './actions';
 import undoable, {excludeAction} from 'redux-undo';
 
 // {
@@ -42,8 +45,27 @@ function cards(state={}, action) {
     }
 }
 
+function table(state={}, action) {
+    switch (action.type) {
+        case RENAME_COLUMNS_REQUEST:
+            return _.assign({}, state, {renamingState: "waiting"});
+        case RENAME_COLUMNS_FAILURE:
+            return _.assign({}, state, {renamingState: "error"});
+        case RENAME_COLUMNS_SUCCESS:
+            return _.assign({}, state, {renamingState: "success"});
+        case CREATE_NEW_TABLE_REQUEST:
+            return _.assign({}, state, {creatingNewTableState: "waiting"});
+        case CREATE_NEW_TABLE_FAILURE:
+            return _.assign({}, state, {creatingNewTableState: "error"});
+        case CREATE_NEW_TABLE_SUCCESS:
+            return _.assign({}, state, {creatingNewTableState: "success"});
+        default:
+            return state;
+    }
+}
+
 const editorReducer = combineReducers({
-    tableName: (state="", action) => state,
+    table: table,
     attributes: undoable(attributes, {filter: excludeAction(SET_ATTR_LABEL)}),
     cards: undoable(cards)
 });

@@ -118,7 +118,7 @@
 	//  Create the store
 	// ----------------------------------------------------------
 	var createStoreWithMiddleware = (0, _redux.applyMiddleware)(_reduxThunk2['default'])(_redux.createStore);
-	var store = (0, _redux.createStore)(_reducers2['default'], { tableName: 'mainTable' });
+	var store = createStoreWithMiddleware(_reducers2['default'], { table: { tableName: 'mainTable' } });
 	window.store = store;
 	
 	var App = (function (_React$Component) {
@@ -25159,6 +25159,10 @@
 	exports.renameColumnsSuccess = renameColumnsSuccess;
 	exports.renameColumnsFailure = renameColumnsFailure;
 	exports.renameColumns = renameColumns;
+	exports.createNewTableRequest = createNewTableRequest;
+	exports.createNewTableSuccess = createNewTableSuccess;
+	exports.createNewTableFailure = createNewTableFailure;
+	exports.createNewTable = createNewTable;
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
@@ -25186,6 +25190,13 @@
 	var RENAME_COLUMNS_SUCCESS = 'RENAME_COLUMNS_SUCCESS';
 	
 	exports.RENAME_COLUMNS_SUCCESS = RENAME_COLUMNS_SUCCESS;
+	var CREATE_NEW_TABLE_REQUEST = 'CREATE_NEW_TABLE_REQUEST';
+	exports.CREATE_NEW_TABLE_REQUEST = CREATE_NEW_TABLE_REQUEST;
+	var CREATE_NEW_TABLE_FAILURE = 'CREATE_NEW_TABLE_FAILURE';
+	exports.CREATE_NEW_TABLE_FAILURE = CREATE_NEW_TABLE_FAILURE;
+	var CREATE_NEW_TABLE_SUCCESS = 'CREATE_NEW_TABLE_SUCCESS';
+	
+	exports.CREATE_NEW_TABLE_SUCCESS = CREATE_NEW_TABLE_SUCCESS;
 	
 	function setOrder(order) {
 	    return { type: SET_ORDER, order: order };
@@ -25228,10 +25239,37 @@
 	    return function (dispatch) {
 	        dispatch(renameColumnsRequest(namesMap));
 	
-	        rpc.call("TableSrv.rename_columns", [tableName, namesMap]).then(function () {
+	        return rpc.call("TableSrv.rename_columns", [tableName, namesMap]).then(function () {
 	            return dispatch(renameColumnsSuccess(namesMap));
 	        }).otherwise(function (error) {
 	            return dispatch(renameColumnsFailure(namesMap, error));
+	        });
+	    };
+	}
+	
+	function createNewTableRequest() {
+	    return { type: CREATE_NEW_TABLE_REQUEST };
+	}
+	
+	function createNewTableSuccess() {
+	    return { type: CREATE_NEW_TABLE_SUCCESS };
+	}
+	
+	function createNewTableFailure(error) {
+	    return { type: CREATE_NEW_TABLE_FAILURE, error: error };
+	}
+	
+	function createNewTable(name, sourceTable, schema) {
+	    var rpc = _context2['default'].instance().rpc;
+	    return function (dispatch) {
+	        dispatch(createNewTableRequest());
+	
+	        return rpc.call("TableSrv.get_data", [sourceTable]).then(function (data) {
+	            return rpc.call("TableSrv.new_table", [name, data, schema]);
+	        }).then(function () {
+	            return dispatch(createNewTableSuccess());
+	        }).otherwise(function (error) {
+	            return dispatch(createNewTableFailure(error));
 	        });
 	    };
 	}
@@ -28788,6 +28826,12 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
+	var _reactRedux = __webpack_require__(/*! react-redux */ 299);
+	
+	var _lodash = __webpack_require__(/*! lodash */ 2);
+	
+	var _lodash2 = _interopRequireDefault(_lodash);
+	
 	var _remote = __webpack_require__(/*! remote */ 45);
 	
 	var _remote2 = _interopRequireDefault(_remote);
@@ -28806,19 +28850,50 @@
 	    _inherits(Launcher, _React$Component);
 	
 	    function Launcher(props) {
+	        var _this = this;
+	
 	        _classCallCheck(this, Launcher);
 	
 	        _get(Object.getPrototypeOf(Launcher.prototype), 'constructor', this).call(this, props);
-	
-	        props.dispatch();
+	        this._renameColumns(props)
+	        //TODO: .then((x) => {this._renameCategoricalValues(props);})
+	        .then(function (x) {
+	            _this._createFinalTable(props);
+	        });
 	    }
 	
 	    _createClass(Launcher, [{
+	        key: '_renameColumns',
+	        value: function _renameColumns(props) {
+	            var namesMap = {};
+	            _lodash2['default'].mapValues(props.attributes.present.attrsByName, function (x) {
+	                if (x.name !== x.label) namesMap[x.name] = x.label;
+	            });
+	            return props.dispatch((0, _actions.renameColumns)(props.table.tableName, namesMap));
+	        }
+	    }, {
+	        key: '_createFinalTable',
+	        value: function _createFinalTable(props) {
+	            var name = config.indyvaTableName;
+	            var sourceTable = props.table.tableName;
+	            var schema = {
+	                dataset_type: "TABLE",
+	                index: props.attributes.present.index,
+	                attributes: _lodash2['default'].mapValues(props.attributes.present.attrsByName, function (attr) {
+	                    return _lodash2['default'].omit(attr, ["label", "name"]);
+	                })
+	            };
+	            return props.dispatch((0, _actions.createNewTable)(config.indyvaTableName, sourceTable, schema));
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var dataTableState = "success";
-	            var schemaState = "waiting";
-	            var indyvaState = "error";
+	            var renamingState = this.props.table.renamingState;
+	            var categoricalValuesState = "waiting";
+	            var finalTableState = this.props.table.creatingNewTableState;
+	            var indyvaState = "waiting";
+	
+	            var ready = this.props.table.renamingState === "success" && this.props.table.creatingNewTableState === "success";
 	            return _react2['default'].createElement(
 	                'div',
 	                { className: 'launcher col-sm-6 col-sm-offset-3' },
@@ -28827,13 +28902,18 @@
 	                    null,
 	                    _react2['default'].createElement(
 	                        _testedListItem2['default'],
-	                        { testingState: dataTableState },
-	                        ' Create the Data Table '
+	                        { testingState: renamingState },
+	                        ' Rename Columns '
 	                    ),
 	                    _react2['default'].createElement(
 	                        _testedListItem2['default'],
-	                        { testingState: schemaState },
-	                        ' Save the Schema modifications '
+	                        { testingState: categoricalValuesState },
+	                        ' Modify Categorical Values '
+	                    ),
+	                    _react2['default'].createElement(
+	                        _testedListItem2['default'],
+	                        { testingState: finalTableState },
+	                        ' Prepare Final Table '
 	                    ),
 	                    _react2['default'].createElement(
 	                        _testedListItem2['default'],
@@ -28843,9 +28923,11 @@
 	                ),
 	                _react2['default'].createElement(
 	                    _reactBootstrap.Button,
-	                    { bsStyle: 'primary', block: true,
+	                    { bsStyle: 'primary', block: true, disabled: !ready,
 	                        onClick: function () {
-	                            window.location = config.afterLobbyAppUrl;
+	                            if (ready) {
+	                                window.location = config.afterLobbyAppUrl;
+	                            }
 	                        } },
 	                    'Launch'
 	                )
@@ -28856,7 +28938,9 @@
 	    return Launcher;
 	})(_react2['default'].Component);
 	
-	exports['default'] = Launcher;
+	exports['default'] = (0, _reactRedux.connect)(function (state) {
+	    return state;
+	})(Launcher);
 	module.exports = exports['default'];
 
 /***/ },
@@ -28901,21 +28985,23 @@
 	        key: 'render',
 	        value: function render() {
 	            var icon = "glyphicon glyphicon-";
-	            var textStyle = "";
+	            var textStyle = null;
 	            switch (this.props.testingState) {
 	                case "success":
 	                    icon += "ok-circle";
-	                    textStyle += "success";
+	                    textStyle = "success";
 	                    break;
 	                case "error":
 	                    icon += "ban-circle";
-	                    textStyle += "danger";
+	                    textStyle = "danger";
 	                    break;
 	                case "waiting":
 	                    icon += "time";
 	                    break;
 	                default:
-	                    console.error("This testingState is not correct:", this.props.testingState);
+	                    icon = "";
+	                    textStyle = null;
+	                    console.warn("This testingState is not correct:", this.props.testingState);
 	            }
 	            return _react2['default'].createElement(
 	                _reactBootstrap.ListGroupItem,
@@ -29037,11 +29123,29 @@
 	    }
 	}
 	
+	function table(state, action) {
+	    if (state === undefined) state = {};
+	
+	    switch (action.type) {
+	        case _actions.RENAME_COLUMNS_REQUEST:
+	            return _lodash2['default'].assign({}, state, { renamingState: "waiting" });
+	        case _actions.RENAME_COLUMNS_FAILURE:
+	            return _lodash2['default'].assign({}, state, { renamingState: "error" });
+	        case _actions.RENAME_COLUMNS_SUCCESS:
+	            return _lodash2['default'].assign({}, state, { renamingState: "success" });
+	        case _actions.CREATE_NEW_TABLE_REQUEST:
+	            return _lodash2['default'].assign({}, state, { creatingNewTableState: "waiting" });
+	        case _actions.CREATE_NEW_TABLE_FAILURE:
+	            return _lodash2['default'].assign({}, state, { creatingNewTableState: "error" });
+	        case _actions.CREATE_NEW_TABLE_SUCCESS:
+	            return _lodash2['default'].assign({}, state, { creatingNewTableState: "success" });
+	        default:
+	            return state;
+	    }
+	}
+	
 	var editorReducer = (0, _redux.combineReducers)({
-	    tableName: function tableName(state, action) {
-	        if (state === undefined) state = "";
-	        return state;
-	    },
+	    table: table,
 	    attributes: (0, _reduxUndo2['default'])(attributes, { filter: (0, _reduxUndo.excludeAction)(_actions.SET_ATTR_LABEL) }),
 	    cards: (0, _reduxUndo2['default'])(cards)
 	});

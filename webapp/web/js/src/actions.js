@@ -11,6 +11,10 @@ export const RENAME_COLUMNS_REQUEST = 'RENAME_COLUMNS_REQUEST';
 export const RENAME_COLUMNS_FAILURE = 'RENAME_COLUMNS_FAILURE';
 export const RENAME_COLUMNS_SUCCESS = 'RENAME_COLUMNS_SUCCESS';
 
+export const CREATE_NEW_TABLE_REQUEST = 'CREATE_NEW_TABLE_REQUEST';
+export const CREATE_NEW_TABLE_FAILURE = 'CREATE_NEW_TABLE_FAILURE';
+export const CREATE_NEW_TABLE_SUCCESS = 'CREATE_NEW_TABLE_SUCCESS';
+
 
 export function setOrder(order) {
     return {type: SET_ORDER, order};
@@ -52,8 +56,33 @@ export function renameColumns(tableName, namesMap) {
     return (dispatch) => {
         dispatch(renameColumnsRequest(namesMap));
 
-        rpc.call("TableSrv.rename_columns", [tableName, namesMap])
+        return rpc.call("TableSrv.rename_columns", [tableName, namesMap])
         .then(() => dispatch(renameColumnsSuccess(namesMap)))
         .otherwise((error) => dispatch(renameColumnsFailure(namesMap, error)))
+    }
+}
+
+export function createNewTableRequest() {
+    return {type: CREATE_NEW_TABLE_REQUEST}
+}
+export function createNewTableSuccess() {
+    return {type: CREATE_NEW_TABLE_SUCCESS}
+}
+export function createNewTableFailure(error) {
+    return {type: CREATE_NEW_TABLE_FAILURE, error}
+}
+
+
+export function createNewTable(name, sourceTable, schema) {
+    const rpc = Context.instance().rpc;
+    return (dispatch) => {
+        dispatch(createNewTableRequest())
+
+        return rpc.call("TableSrv.get_data", [sourceTable])
+        .then( (data) => {
+            return rpc.call("TableSrv.new_table", [name, data, schema])
+        })
+        .then(() => dispatch(createNewTableSuccess()))
+        .otherwise((error) => dispatch(createNewTableFailure(error)))
     }
 }
