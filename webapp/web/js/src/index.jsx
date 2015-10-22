@@ -18,19 +18,20 @@ const config = remote.getGlobal('configuration');
 //  Setup indyva's conection
 // ----------------------------------------------------------
 import Context from 'context';
-var context = new Context(config.indyvaServer, config.indyvaPath, config.indyvaPort);
+let context = new Context(config.indyvaServer, config.indyvaPath, config.indyvaPort);
 context.install();
-var session = 's'+String(Math.round((Math.random()*100000)));
+let session = 's'+String(Math.round((Math.random()*100000)));
 context.openSession(session);
 
-var rpc = context.rpc;
-//var hub = context.hub;
+let rpc = context.rpc;
+let hub = context.hub;
 
 // ----------------------------------------------------------
 //  Create the store
 // ----------------------------------------------------------
 const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
-let store = createStore(editorReducer);
+let store = createStore(editorReducer, {tableName: 'mainTable'});
+window.store = store;
 
 class App extends React.Component {
     render() {

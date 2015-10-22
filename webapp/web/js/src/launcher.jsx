@@ -3,10 +3,17 @@ import remote from 'remote';
 import {Button, ListGroup} from 'react-bootstrap';
 
 import TestedListItem from './testedListItem';
+import {renameColumns} from './actions';
 
 const config = remote.getGlobal('configuration');
 
 class Launcher extends React.Component {
+    constructor(props) {
+        super(props);
+
+        props.dispatch();
+
+    }
     render () {
         let dataTableState = "success";
         let schemaState = "waiting";

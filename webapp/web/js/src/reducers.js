@@ -43,6 +43,7 @@ function cards(state={}, action) {
 }
 
 const editorReducer = combineReducers({
+    tableName: (state="", action) => state,
     attributes: undoable(attributes, {filter: excludeAction(SET_ATTR_LABEL)}),
     cards: undoable(cards)
 });

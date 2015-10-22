@@ -112,13 +112,14 @@
 	context.openSession(session);
 	
 	var rpc = context.rpc;
-	//var hub = context.hub;
+	var hub = context.hub;
 	
 	// ----------------------------------------------------------
 	//  Create the store
 	// ----------------------------------------------------------
 	var createStoreWithMiddleware = (0, _redux.applyMiddleware)(_reduxThunk2['default'])(_redux.createStore);
-	var store = (0, _redux.createStore)(_reducers2['default']);
+	var store = (0, _redux.createStore)(_reducers2['default'], { tableName: 'mainTable' });
+	window.store = store;
 	
 	var App = (function (_React$Component) {
 	    _inherits(App, _React$Component);
@@ -25141,7 +25142,7 @@
 /*!********************!*\
   !*** ./actions.js ***!
   \********************/
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
@@ -25154,6 +25155,17 @@
 	exports.setAttrLabel = setAttrLabel;
 	exports.setAttrType = setAttrType;
 	exports.fillFromSchema = fillFromSchema;
+	exports.renameColumnsRequest = renameColumnsRequest;
+	exports.renameColumnsSuccess = renameColumnsSuccess;
+	exports.renameColumnsFailure = renameColumnsFailure;
+	exports.renameColumns = renameColumns;
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	var _context = __webpack_require__(/*! context */ 324);
+	
+	var _context2 = _interopRequireDefault(_context);
+	
 	var SET_ORDER = 'SET_ORDER';
 	exports.SET_ORDER = SET_ORDER;
 	var TOGGLE_CARD_EXPANSION = 'TOGGLE_CARD_EXPANSION';
@@ -25167,6 +25179,13 @@
 	var INIT_CARDS = 'INIT_CARDS';
 	
 	exports.INIT_CARDS = INIT_CARDS;
+	var RENAME_COLUMNS_REQUEST = 'RENAME_COLUMNS_REQUEST';
+	exports.RENAME_COLUMNS_REQUEST = RENAME_COLUMNS_REQUEST;
+	var RENAME_COLUMNS_FAILURE = 'RENAME_COLUMNS_FAILURE';
+	exports.RENAME_COLUMNS_FAILURE = RENAME_COLUMNS_FAILURE;
+	var RENAME_COLUMNS_SUCCESS = 'RENAME_COLUMNS_SUCCESS';
+	
+	exports.RENAME_COLUMNS_SUCCESS = RENAME_COLUMNS_SUCCESS;
 	
 	function setOrder(order) {
 	    return { type: SET_ORDER, order: order };
@@ -25190,6 +25209,31 @@
 	
 	function fillFromSchema(schema) {
 	    return { type: FILL_FROM_SCHEMA, schema: schema };
+	}
+	
+	function renameColumnsRequest(namesMap) {
+	    return { type: RENAME_COLUMNS_REQUEST };
+	}
+	
+	function renameColumnsSuccess(namesMap) {
+	    return { type: RENAME_COLUMNS_SUCCESS, namesMap: namesMap };
+	}
+	
+	function renameColumnsFailure(namesMap, error) {
+	    return { type: RENAME_COLUMNS_FAILURE, namesMap: namesMap, error: error };
+	}
+	
+	function renameColumns(tableName, namesMap) {
+	    var rpc = _context2['default'].instance().rpc;
+	    return function (dispatch) {
+	        dispatch(renameColumnsRequest(namesMap));
+	
+	        rpc.call("TableSrv.rename_columns", [tableName, namesMap]).then(function () {
+	            return dispatch(renameColumnsSuccess(namesMap));
+	        }).otherwise(function (error) {
+	            return dispatch(renameColumnsFailure(namesMap, error));
+	        });
+	    };
 	}
 
 /***/ },
@@ -25463,7 +25507,6 @@
 	        _classCallCheck(this, Loader);
 	
 	        _get(Object.getPrototypeOf(Loader.prototype), 'constructor', this).call(this, props);
-	
 	        var argv = _remote2['default'].process.argv.slice(2);
 	        if (argv.length !== 0) {
 	            this.readTable(argv[0]);
@@ -28755,15 +28798,19 @@
 	
 	var _testedListItem2 = _interopRequireDefault(_testedListItem);
 	
+	var _actions = __webpack_require__(/*! ./actions */ 319);
+	
 	var config = _remote2['default'].getGlobal('configuration');
 	
 	var Launcher = (function (_React$Component) {
 	    _inherits(Launcher, _React$Component);
 	
-	    function Launcher() {
+	    function Launcher(props) {
 	        _classCallCheck(this, Launcher);
 	
-	        _get(Object.getPrototypeOf(Launcher.prototype), 'constructor', this).apply(this, arguments);
+	        _get(Object.getPrototypeOf(Launcher.prototype), 'constructor', this).call(this, props);
+	
+	        props.dispatch();
 	    }
 	
 	    _createClass(Launcher, [{
@@ -28991,6 +29038,10 @@
 	}
 	
 	var editorReducer = (0, _redux.combineReducers)({
+	    tableName: function tableName(state, action) {
+	        if (state === undefined) state = "";
+	        return state;
+	    },
 	    attributes: (0, _reduxUndo2['default'])(attributes, { filter: (0, _reduxUndo.excludeAction)(_actions.SET_ATTR_LABEL) }),
 	    cards: (0, _reduxUndo2['default'])(cards)
 	});

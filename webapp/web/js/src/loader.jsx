@@ -14,7 +14,6 @@ const config = remote.getGlobal('configuration');
 class Loader extends React.Component {
     constructor(props) {
         super(props);
-
         let argv = remote.process.argv.slice(2);
         if (argv.length !== 0) {
             this.readTable(argv[0]);
