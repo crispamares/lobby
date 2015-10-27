@@ -2,7 +2,7 @@
   "name": "lobby",
   "version": "0.1.0",
   "description": "Ingests data",
-  "main": "webpack.confign.js",
+  "main": "nosript.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
