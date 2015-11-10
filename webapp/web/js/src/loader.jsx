@@ -7,7 +7,7 @@ import path from 'path';
 
 import Context from 'context';
 import FileDropper from './fileDropper';
-import {fillFromSchema, initCards} from './actions';
+import {fillFromSchema, initCards, loadTable} from './actions';
 
 const config = remote.getGlobal('configuration');
 
@@ -18,6 +18,7 @@ class Loader extends React.Component {
         if (argv.length !== 0) {
             this.readTable(argv[0]);
         }
+        console.log(this.props);
     }
     readTable (filePath) {
         let {dispatch, history} = this.props;
@@ -30,19 +31,14 @@ class Loader extends React.Component {
         catch(e) {}
         fs.symlinkSync( filePath, destination);
 
-        rpc.call("IOSrv.read_csv", ["mainTable", destination]).then(
-            table => { return rpc.call("TableSrv.schema", [table]) }
-        ).then( schema => {
-            dispatch(fillFromSchema(schema));
-            dispatch(initCards(schema.attributes));
-            console.log("SCHEMA", schema); // setState(SCHEMA) or
-            history.pushState(history.state, "/editor");
-        })
-        .otherwise( error => { console.error("Error while reading the file:", error); });
+        dispatch(loadTable("mainTable", destination))
+        .then(() => {history.pushState(history.state, "/editor");} );
     }
     render () {
         return (
-            <FileDropper onFileDrop={(filePath) => {this.readTable(filePath);} }></FileDropper>
+            <FileDropper onFileDrop={(filePath) => {this.readTable(filePath);} }>
+                <span> Drop here a CSV file </span>
+            </FileDropper>
         )
     }
 }

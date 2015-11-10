@@ -77,7 +77,7 @@
 	
 	var _editor2 = _interopRequireDefault(_editor);
 	
-	var _loader = __webpack_require__(/*! ./loader */ 322);
+	var _loader = __webpack_require__(/*! ./loader */ 346);
 	
 	var _loader2 = _interopRequireDefault(_loader);
 	
@@ -101,7 +101,7 @@
 	//  Setup indyva's conection
 	// ----------------------------------------------------------
 	
-	var _context = __webpack_require__(/*! context */ 324);
+	var _context = __webpack_require__(/*! context */ 320);
 	
 	var _context2 = _interopRequireDefault(_context);
 	
@@ -4209,11 +4209,11 @@
 	
 	var _actions = __webpack_require__(/*! ./actions */ 319);
 	
-	var _card = __webpack_require__(/*! ./card */ 320);
+	var _card = __webpack_require__(/*! ./card */ 344);
 	
 	var _card2 = _interopRequireDefault(_card);
 	
-	var _toolbar = __webpack_require__(/*! ./toolbar */ 321);
+	var _toolbar = __webpack_require__(/*! ./toolbar */ 345);
 	
 	var _toolbar2 = _interopRequireDefault(_toolbar);
 	
@@ -25155,18 +25155,14 @@
 	exports.setAttrLabel = setAttrLabel;
 	exports.setAttrType = setAttrType;
 	exports.fillFromSchema = fillFromSchema;
-	exports.renameColumnsRequest = renameColumnsRequest;
-	exports.renameColumnsSuccess = renameColumnsSuccess;
-	exports.renameColumnsFailure = renameColumnsFailure;
 	exports.renameColumns = renameColumns;
-	exports.createNewTableRequest = createNewTableRequest;
-	exports.createNewTableSuccess = createNewTableSuccess;
-	exports.createNewTableFailure = createNewTableFailure;
 	exports.createNewTable = createNewTable;
+	exports.loadTable = loadTable;
+	exports.writeTable = writeTable;
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _context = __webpack_require__(/*! context */ 324);
+	var _context = __webpack_require__(/*! context */ 320);
 	
 	var _context2 = _interopRequireDefault(_context);
 	
@@ -25183,6 +25179,13 @@
 	var INIT_CARDS = 'INIT_CARDS';
 	
 	exports.INIT_CARDS = INIT_CARDS;
+	var LOAD_TABLE_REQUEST = 'LOAD_TABLE_REQUEST';
+	exports.LOAD_TABLE_REQUEST = LOAD_TABLE_REQUEST;
+	var LOAD_TABLE_FAILURE = 'LOAD_TABLE_FAILURE';
+	exports.LOAD_TABLE_FAILURE = LOAD_TABLE_FAILURE;
+	var LOAD_TABLE_SUCCESS = 'LOAD_TABLE_SUCCESS';
+	
+	exports.LOAD_TABLE_SUCCESS = LOAD_TABLE_SUCCESS;
 	var RENAME_COLUMNS_REQUEST = 'RENAME_COLUMNS_REQUEST';
 	exports.RENAME_COLUMNS_REQUEST = RENAME_COLUMNS_REQUEST;
 	var RENAME_COLUMNS_FAILURE = 'RENAME_COLUMNS_FAILURE';
@@ -25197,6 +25200,13 @@
 	var CREATE_NEW_TABLE_SUCCESS = 'CREATE_NEW_TABLE_SUCCESS';
 	
 	exports.CREATE_NEW_TABLE_SUCCESS = CREATE_NEW_TABLE_SUCCESS;
+	var WRITE_TABLE_REQUEST = 'WRITE_TABLE_REQUEST';
+	exports.WRITE_TABLE_REQUEST = WRITE_TABLE_REQUEST;
+	var WRITE_TABLE_FAILURE = 'WRITE_TABLE_FAILURE';
+	exports.WRITE_TABLE_FAILURE = WRITE_TABLE_FAILURE;
+	var WRITE_TABLE_SUCCESS = 'WRITE_TABLE_SUCCESS';
+	
+	exports.WRITE_TABLE_SUCCESS = WRITE_TABLE_SUCCESS;
 	
 	function setOrder(order) {
 	    return { type: SET_ORDER, order: order };
@@ -25222,391 +25232,72 @@
 	    return { type: FILL_FROM_SCHEMA, schema: schema };
 	}
 	
-	function renameColumnsRequest(namesMap) {
-	    return { type: RENAME_COLUMNS_REQUEST };
-	}
-	
-	function renameColumnsSuccess(namesMap) {
-	    return { type: RENAME_COLUMNS_SUCCESS, namesMap: namesMap };
-	}
-	
-	function renameColumnsFailure(namesMap, error) {
-	    return { type: RENAME_COLUMNS_FAILURE, namesMap: namesMap, error: error };
-	}
-	
 	function renameColumns(tableName, namesMap) {
 	    var rpc = _context2['default'].instance().rpc;
+	    if (_.isEmpty(namesMap)) {
+	        /* If nothing has to be renamed, dispatch a success */
+	        return function (dispatch) {
+	            return Promise.resolve(dispatch({ type: RENAME_COLUMNS_SUCCESS, namesMap: namesMap }));
+	        };
+	    }
 	    return function (dispatch) {
-	        dispatch(renameColumnsRequest(namesMap));
+	        dispatch({ type: RENAME_COLUMNS_REQUEST });
 	
 	        return rpc.call("TableSrv.rename_columns", [tableName, namesMap]).then(function () {
-	            return dispatch(renameColumnsSuccess(namesMap));
+	            return dispatch({ type: RENAME_COLUMNS_SUCCESS, namesMap: namesMap });
 	        }).otherwise(function (error) {
-	            return dispatch(renameColumnsFailure(namesMap, error));
+	            return dispatch({ type: RENAME_COLUMNS_FAILURE, namesMap: namesMap, error: error });
 	        });
 	    };
-	}
-	
-	function createNewTableRequest() {
-	    return { type: CREATE_NEW_TABLE_REQUEST };
-	}
-	
-	function createNewTableSuccess() {
-	    return { type: CREATE_NEW_TABLE_SUCCESS };
-	}
-	
-	function createNewTableFailure(error) {
-	    return { type: CREATE_NEW_TABLE_FAILURE, error: error };
 	}
 	
 	function createNewTable(name, sourceTable, schema) {
 	    var rpc = _context2['default'].instance().rpc;
 	    return function (dispatch) {
-	        dispatch(createNewTableRequest());
+	        dispatch({ type: CREATE_NEW_TABLE_REQUEST });
 	
 	        return rpc.call("TableSrv.get_data", [sourceTable]).then(function (data) {
 	            return rpc.call("TableSrv.new_table", [name, data, schema]);
 	        }).then(function () {
-	            return dispatch(createNewTableSuccess());
+	            return dispatch({ type: CREATE_NEW_TABLE_SUCCESS });
 	        }).otherwise(function (error) {
-	            return dispatch(createNewTableFailure(error));
+	            return dispatch({ type: CREATE_NEW_TABLE_FAILURE, error: error });
+	        });
+	    };
+	}
+	
+	function loadTable(tableName, destination) {
+	    var rpc = _context2['default'].instance().rpc;
+	    return function (dispatch) {
+	        dispatch({ type: LOAD_TABLE_REQUEST });
+	
+	        return rpc.call("IOSrv.read_csv", [tableName, destination]).then(function (table) {
+	            return rpc.call("TableSrv.schema", [table]);
+	        }).then(function (schema) {
+	            dispatch({ type: LOAD_TABLE_SUCCESS });
+	            dispatch(fillFromSchema(schema));
+	            dispatch(initCards(schema.attributes));
+	        }).otherwise(function (error) {
+	            dispatch({ type: LOAD_TABLE_FAILURE, error: error });
+	        });
+	    };
+	}
+	
+	function writeTable(tableName, filePath) {
+	    var rpc = _context2['default'].instance().rpc;
+	    return function (dispatch) {
+	        dispatch({ type: WRITE_TABLE_REQUEST });
+	
+	        return rpc.call("IOSrv.write_csv", [tableName, filePath]).then(function () {
+	            dispatch({ type: WRITE_TABLE_SUCCESS });
+	        }).otherwise(function (error) {
+	            dispatch({ type: WRITE_TABLE_FAILURE, error: error });
 	        });
 	    };
 	}
 
 /***/ },
 /* 320 */
-/*!******************!*\
-  !*** ./card.jsx ***!
-  \******************/
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _lodash = __webpack_require__(/*! lodash */ 2);
-	
-	var _lodash2 = _interopRequireDefault(_lodash);
-	
-	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 67);
-	
-	var Card = _react2['default'].createClass({
-	  displayName: 'Card',
-	
-	  PropTypes: {
-	    onHeaderClick: _react.PropTypes.func.isRequired,
-	    onAttrLabelChanged: _react.PropTypes.func.isRequired,
-	    onAttrTypeChanged: _react.PropTypes.func.isRequired,
-	    attrLabel: _react.PropTypes.string.isRequired,
-	    attrType: _react.PropTypes.string.isRequired,
-	    order: _react.PropTypes.number.isRequired,
-	    expanded: _react.PropTypes.bool.isRequired
-	  },
-	  shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
-	    return !_lodash2['default'].isEqual(nextProps, this.props, function (x, y) {
-	      if (_lodash2['default'].isFunction(x)) {
-	        return true;
-	      }
-	    });
-	  },
-	  render: function render() {
-	    var _this = this;
-	
-	    var props = this.props;
-	
-	    var cardClasses = _react2['default'].addons.classSet({
-	      'card': true,
-	      'expanded': this.props.expanded
-	    });
-	    var contentClasses = _react2['default'].addons.classSet({
-	      'card-content': true,
-	      'hidden': !this.props.expanded
-	    });
-	    return _react2['default'].createElement(
-	      'div',
-	      { className: cardClasses },
-	      _react2['default'].createElement(
-	        'div',
-	        { className: 'btn btn-xs btn-default card-anchor card-move' },
-	        _react2['default'].createElement('span', { className: 'icon glyphicon glyphicon-move' })
-	      ),
-	      _react2['default'].createElement(
-	        'div',
-	        { className: 'card-header', onClick: function (ev) {
-	            _this.props.onHeaderClick(ev);
-	          } },
-	        _react2['default'].createElement(
-	          'span',
-	          { className: 'card-title' },
-	          props.order + ".- " + props.attrLabel
-	        ),
-	        _react2['default'].createElement(
-	          'span',
-	          { className: 'pull-right text-muted' },
-	          ' ',
-	          _lodash2['default'].startCase(props.attrType.toLowerCase()),
-	          '  '
-	        )
-	      ),
-	      _react2['default'].createElement(
-	        'div',
-	        { className: contentClasses },
-	        _react2['default'].createElement(
-	          'form',
-	          { className: 'form-horizontal', onSubmit: function (ev) {
-	              ev.preventDefault();
-	            } },
-	          _react2['default'].createElement(_reactBootstrap.Input, { type: 'text', label: 'Name', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
-	            value: props.attrLabel, onChange: props.onAttrLabelChanged }),
-	          _react2['default'].createElement(
-	            _reactBootstrap.Input,
-	            { type: 'select', label: 'Attribute Type', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
-	              value: props.attrType, onChange: props.onAttrTypeChanged },
-	            _react2['default'].createElement(
-	              'option',
-	              { value: 'QUANTITATIVE' },
-	              'Quantitative'
-	            ),
-	            _react2['default'].createElement(
-	              'option',
-	              { value: 'CATEGORICAL' },
-	              'Categorical'
-	            ),
-	            _react2['default'].createElement(
-	              'option',
-	              { value: 'ORDINAL' },
-	              'Ordinal'
-	            )
-	          )
-	        )
-	      )
-	    );
-	  }
-	});
-	
-	exports['default'] = Card;
-	module.exports = exports['default'];
-
-/***/ },
-/* 321 */
-/*!*********************!*\
-  !*** ./toolbar.jsx ***!
-  \*********************/
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, '__esModule', {
-	    value: true
-	});
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 67);
-	
-	var ToolBar = _react2['default'].createClass({
-	    displayName: 'ToolBar',
-	
-	    getDefaultProps: function getDefaultProps() {
-	        return {
-	            startAnalysisEnabled: true
-	        };
-	    },
-	    PropTypes: {
-	        onUndoClick: _react.PropTypes.func.isRequired,
-	        onRedoClick: _react.PropTypes.func.isRequired,
-	        onStartAnalysisClick: _react.PropTypes.func.isRequired,
-	        startAnalysisEnabled: _react.PropTypes.bool.isRequired
-	    },
-	    render: function render() {
-	        var _this = this;
-	
-	        return _react2['default'].createElement(
-	            _reactBootstrap.Navbar,
-	            { brand: 'Lobby', fixedTop: true },
-	            _react2['default'].createElement(
-	                _reactBootstrap.Nav,
-	                { navbar: true, right: true },
-	                _react2['default'].createElement(
-	                    _reactBootstrap.NavItem,
-	                    { eventKey: 1, onClick: this.props.onUndoClick },
-	                    _react2['default'].createElement('span', { className: 'glyphicon glyphicon-backward' }),
-	                    ' ',
-	                    _react2['default'].createElement(
-	                        'span',
-	                        null,
-	                        'Undo'
-	                    )
-	                ),
-	                _react2['default'].createElement(
-	                    _reactBootstrap.NavItem,
-	                    { eventKey: 2, onClick: this.props.onRedoClick },
-	                    _react2['default'].createElement(
-	                        'span',
-	                        null,
-	                        'Redo'
-	                    ),
-	                    ' ',
-	                    _react2['default'].createElement('span', { className: 'glyphicon glyphicon-forward' })
-	                ),
-	                _react2['default'].createElement(
-	                    'div',
-	                    { className: 'navbar-form navbar-left' },
-	                    _react2['default'].createElement(
-	                        _reactBootstrap.Button,
-	                        { bsStyle: 'primary',
-	                            disabled: !this.props.startAnalysisEnabled,
-	                            onClick: function () {
-	                                if (_this.props.startAnalysisEnabled) _this.props.onStartAnalysisClick();
-	                            } },
-	                        'Start the Anlaysis'
-	                    )
-	                )
-	            )
-	        );
-	    }
-	});
-	
-	exports['default'] = ToolBar;
-	module.exports = exports['default'];
-
-/***/ },
-/* 322 */
-/*!********************!*\
-  !*** ./loader.jsx ***!
-  \********************/
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, '__esModule', {
-	    value: true
-	});
-	
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-	
-	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _reactRedux = __webpack_require__(/*! react-redux */ 299);
-	
-	var _lodash = __webpack_require__(/*! lodash */ 2);
-	
-	var _lodash2 = _interopRequireDefault(_lodash);
-	
-	var _remote = __webpack_require__(/*! remote */ 45);
-	
-	var _remote2 = _interopRequireDefault(_remote);
-	
-	var _path = __webpack_require__(/*! path */ 323);
-	
-	var _path2 = _interopRequireDefault(_path);
-	
-	var _context = __webpack_require__(/*! context */ 324);
-	
-	var _context2 = _interopRequireDefault(_context);
-	
-	var _fileDropper = __webpack_require__(/*! ./fileDropper */ 348);
-	
-	var _fileDropper2 = _interopRequireDefault(_fileDropper);
-	
-	var _actions = __webpack_require__(/*! ./actions */ 319);
-	
-	var fs = _remote2['default'].require('fs');
-	
-	var config = _remote2['default'].getGlobal('configuration');
-	
-	var Loader = (function (_React$Component) {
-	    _inherits(Loader, _React$Component);
-	
-	    function Loader(props) {
-	        _classCallCheck(this, Loader);
-	
-	        _get(Object.getPrototypeOf(Loader.prototype), 'constructor', this).call(this, props);
-	        var argv = _remote2['default'].process.argv.slice(2);
-	        if (argv.length !== 0) {
-	            this.readTable(argv[0]);
-	        }
-	    }
-	
-	    _createClass(Loader, [{
-	        key: 'readTable',
-	        value: function readTable(filePath) {
-	            var _props = this.props;
-	            var dispatch = _props.dispatch;
-	            var history = _props.history;
-	
-	            var rpc = _context2['default'].instance().rpc;
-	            var destination = _path2['default'].join(config.destinationPath, _path2['default'].basename(filePath));
-	
-	            try {
-	                if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
-	            } catch (e) {}
-	            fs.symlinkSync(filePath, destination);
-	
-	            rpc.call("IOSrv.read_csv", ["mainTable", destination]).then(function (table) {
-	                return rpc.call("TableSrv.schema", [table]);
-	            }).then(function (schema) {
-	                dispatch((0, _actions.fillFromSchema)(schema));
-	                dispatch((0, _actions.initCards)(schema.attributes));
-	                console.log("SCHEMA", schema); // setState(SCHEMA) or
-	                history.pushState(history.state, "/editor");
-	            }).otherwise(function (error) {
-	                console.error("Error while reading the file:", error);
-	            });
-	        }
-	    }, {
-	        key: 'render',
-	        value: function render() {
-	            var _this = this;
-	
-	            return _react2['default'].createElement(_fileDropper2['default'], { onFileDrop: function (filePath) {
-	                    _this.readTable(filePath);
-	                } });
-	        }
-	    }]);
-	
-	    return Loader;
-	})(_react2['default'].Component);
-	
-	exports['default'] = (0, _reactRedux.connect)(function (state) {
-	    return state;
-	})(Loader);
-	module.exports = exports['default'];
-
-/***/ },
-/* 323 */
-/*!***********************!*\
-  !*** external "path" ***!
-  \***********************/
-/***/ function(module, exports) {
-
-	module.exports = require("path");
-
-/***/ },
-/* 324 */
 /*!***********************************!*\
   !*** ../lib/indyva-js/context.js ***!
   \***********************************/
@@ -25614,7 +25305,7 @@
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;"use strict";
 	
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! when */ 325), __webpack_require__(/*! reconnecting-websocket */ 345), __webpack_require__(/*! ws-rpc */ 346), __webpack_require__(/*! hub */ 347)], __WEBPACK_AMD_DEFINE_RESULT__ = function (when, ReconnectingWebSocket, WsRpc, Hub) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! when */ 321), __webpack_require__(/*! reconnecting-websocket */ 341), __webpack_require__(/*! ws-rpc */ 342), __webpack_require__(/*! hub */ 343)], __WEBPACK_AMD_DEFINE_RESULT__ = function (when, ReconnectingWebSocket, WsRpc, Hub) {
 	
 	  var Context = function Context(server, path, port) {
 	    var self = this;
@@ -25758,7 +25449,7 @@
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ },
-/* 325 */
+/* 321 */
 /*!*************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/when.js ***!
   \*************************************************************/
@@ -25775,24 +25466,24 @@
 	(function(define) { 'use strict';
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require) {
 	
-		var timed = __webpack_require__(/*! ./lib/decorators/timed */ 326);
-		var array = __webpack_require__(/*! ./lib/decorators/array */ 331);
-		var flow = __webpack_require__(/*! ./lib/decorators/flow */ 334);
-		var fold = __webpack_require__(/*! ./lib/decorators/fold */ 335);
-		var inspect = __webpack_require__(/*! ./lib/decorators/inspect */ 336);
-		var generate = __webpack_require__(/*! ./lib/decorators/iterate */ 337);
-		var progress = __webpack_require__(/*! ./lib/decorators/progress */ 338);
-		var withThis = __webpack_require__(/*! ./lib/decorators/with */ 339);
-		var unhandledRejection = __webpack_require__(/*! ./lib/decorators/unhandledRejection */ 340);
-		var TimeoutError = __webpack_require__(/*! ./lib/TimeoutError */ 330);
+		var timed = __webpack_require__(/*! ./lib/decorators/timed */ 322);
+		var array = __webpack_require__(/*! ./lib/decorators/array */ 327);
+		var flow = __webpack_require__(/*! ./lib/decorators/flow */ 330);
+		var fold = __webpack_require__(/*! ./lib/decorators/fold */ 331);
+		var inspect = __webpack_require__(/*! ./lib/decorators/inspect */ 332);
+		var generate = __webpack_require__(/*! ./lib/decorators/iterate */ 333);
+		var progress = __webpack_require__(/*! ./lib/decorators/progress */ 334);
+		var withThis = __webpack_require__(/*! ./lib/decorators/with */ 335);
+		var unhandledRejection = __webpack_require__(/*! ./lib/decorators/unhandledRejection */ 336);
+		var TimeoutError = __webpack_require__(/*! ./lib/TimeoutError */ 326);
 	
 		var Promise = [array, flow, fold, generate, progress,
 			inspect, withThis, timed, unhandledRejection]
 			.reduce(function(Promise, feature) {
 				return feature(Promise);
-			}, __webpack_require__(/*! ./lib/Promise */ 342));
+			}, __webpack_require__(/*! ./lib/Promise */ 338));
 	
-		var apply = __webpack_require__(/*! ./lib/apply */ 333)(Promise);
+		var apply = __webpack_require__(/*! ./lib/apply */ 329)(Promise);
 	
 		// Public API
 	
@@ -25991,11 +25682,11 @@
 	
 		return when;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	})(__webpack_require__(/*! !webpack amd define */ 329));
+	})(__webpack_require__(/*! !webpack amd define */ 325));
 
 
 /***/ },
-/* 326 */
+/* 322 */
 /*!*****************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/timed.js ***!
   \*****************************************************************************/
@@ -26008,8 +25699,8 @@
 	(function(define) { 'use strict';
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
 	
-		var env = __webpack_require__(/*! ../env */ 327);
-		var TimeoutError = __webpack_require__(/*! ../TimeoutError */ 330);
+		var env = __webpack_require__(/*! ../env */ 323);
+		var TimeoutError = __webpack_require__(/*! ../TimeoutError */ 326);
 	
 		function setTimeout(f, ms, x, y) {
 			return env.setTimer(function() {
@@ -26078,11 +25769,11 @@
 		};
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 327 */
+/* 323 */
 /*!****************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/env.js ***!
   \****************************************************************/
@@ -26119,7 +25810,7 @@
 	
 		} else if (!capturedSetTimeout) { // vert.x
 			var vertxRequire = require;
-			var vertx = __webpack_require__(/*! vertx */ 328);
+			var vertx = __webpack_require__(/*! vertx */ 324);
 			setTimer = function (f, ms) { return vertx.setTimer(ms, f); };
 			clearTimer = vertx.cancelTimer;
 			asap = vertx.runOnLoop || vertx.runOnContext;
@@ -26160,11 +25851,11 @@
 			};
 		}
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 328 */
+/* 324 */
 /*!***********************!*\
   !*** ../lib/vertx.js ***!
   \***********************/
@@ -26180,7 +25871,7 @@
 	module.exports = exports["default"];
 
 /***/ },
-/* 329 */
+/* 325 */
 /*!***************************************!*\
   !*** (webpack)/buildin/amd-define.js ***!
   \***************************************/
@@ -26190,7 +25881,7 @@
 
 
 /***/ },
-/* 330 */
+/* 326 */
 /*!*************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/TimeoutError.js ***!
   \*************************************************************************/
@@ -26222,10 +25913,10 @@
 	
 		return TimeoutError;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 /***/ },
-/* 331 */
+/* 327 */
 /*!*****************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/array.js ***!
   \*****************************************************************************/
@@ -26238,8 +25929,8 @@
 	(function(define) { 'use strict';
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
 	
-		var state = __webpack_require__(/*! ../state */ 332);
-		var applier = __webpack_require__(/*! ../apply */ 333);
+		var state = __webpack_require__(/*! ../state */ 328);
+		var applier = __webpack_require__(/*! ../apply */ 329);
 	
 		return function array(Promise) {
 	
@@ -26519,11 +26210,11 @@
 		};
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 332 */
+/* 328 */
 /*!******************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/state.js ***!
   \******************************************************************/
@@ -26563,11 +26254,11 @@
 		}
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 333 */
+/* 329 */
 /*!******************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/apply.js ***!
   \******************************************************************/
@@ -26625,13 +26316,13 @@
 		}
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 	
 	
 
 
 /***/ },
-/* 334 */
+/* 330 */
 /*!****************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/flow.js ***!
   \****************************************************************************/
@@ -26796,11 +26487,11 @@
 		}
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 335 */
+/* 331 */
 /*!****************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/fold.js ***!
   \****************************************************************************/
@@ -26832,11 +26523,11 @@
 		};
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 336 */
+/* 332 */
 /*!*******************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/inspect.js ***!
   \*******************************************************************************/
@@ -26849,7 +26540,7 @@
 	(function(define) { 'use strict';
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
 	
-		var inspect = __webpack_require__(/*! ../state */ 332).inspect;
+		var inspect = __webpack_require__(/*! ../state */ 328).inspect;
 	
 		return function inspection(Promise) {
 	
@@ -26861,11 +26552,11 @@
 		};
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 337 */
+/* 333 */
 /*!*******************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/iterate.js ***!
   \*******************************************************************************/
@@ -26935,11 +26626,11 @@
 		};
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 338 */
+/* 334 */
 /*!********************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/progress.js ***!
   \********************************************************************************/
@@ -26968,11 +26659,11 @@
 		};
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 339 */
+/* 335 */
 /*!****************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/with.js ***!
   \****************************************************************************/
@@ -27014,12 +26705,12 @@
 		};
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 	
 
 
 /***/ },
-/* 340 */
+/* 336 */
 /*!******************************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/decorators/unhandledRejection.js ***!
   \******************************************************************************************/
@@ -27032,8 +26723,8 @@
 	(function(define) { 'use strict';
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require) {
 	
-		var setTimer = __webpack_require__(/*! ../env */ 327).setTimer;
-		var format = __webpack_require__(/*! ../format */ 341);
+		var setTimer = __webpack_require__(/*! ../env */ 323).setTimer;
+		var format = __webpack_require__(/*! ../format */ 337);
 	
 		return function unhandledRejection(Promise) {
 	
@@ -27110,11 +26801,11 @@
 		function noop() {}
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 341 */
+/* 337 */
 /*!*******************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/format.js ***!
   \*******************************************************************/
@@ -27175,11 +26866,11 @@
 		}
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 342 */
+/* 338 */
 /*!********************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/Promise.js ***!
   \********************************************************************/
@@ -27192,20 +26883,20 @@
 	(function(define) { 'use strict';
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require) {
 	
-		var makePromise = __webpack_require__(/*! ./makePromise */ 343);
-		var Scheduler = __webpack_require__(/*! ./Scheduler */ 344);
-		var async = __webpack_require__(/*! ./env */ 327).asap;
+		var makePromise = __webpack_require__(/*! ./makePromise */ 339);
+		var Scheduler = __webpack_require__(/*! ./Scheduler */ 340);
+		var async = __webpack_require__(/*! ./env */ 323).asap;
 	
 		return makePromise({
 			scheduler: new Scheduler(async)
 		});
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	})(__webpack_require__(/*! !webpack amd define */ 329));
+	})(__webpack_require__(/*! !webpack amd define */ 325));
 
 
 /***/ },
-/* 343 */
+/* 339 */
 /*!************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/makePromise.js ***!
   \************************************************************************/
@@ -28137,11 +27828,11 @@
 			return Promise;
 		};
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 344 */
+/* 340 */
 /*!**********************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/when/lib/Scheduler.js ***!
   \**********************************************************************/
@@ -28226,11 +27917,11 @@
 		return Scheduler;
 	
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	}(__webpack_require__(/*! !webpack amd define */ 329)));
+	}(__webpack_require__(/*! !webpack amd define */ 325)));
 
 
 /***/ },
-/* 345 */
+/* 341 */
 /*!**************************************************!*\
   !*** ../lib/indyva-js/reconnecting-websocket.js ***!
   \**************************************************/
@@ -28431,7 +28122,7 @@
 	})();
 
 /***/ },
-/* 346 */
+/* 342 */
 /*!**********************************!*\
   !*** ../lib/indyva-js/ws-rpc.js ***!
   \**********************************/
@@ -28439,7 +28130,7 @@
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;"use strict";
 	
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! when */ 325), __webpack_require__(/*! reconnecting-websocket */ 345)], __WEBPACK_AMD_DEFINE_RESULT__ = function (when, ReconnectingWebSocket) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! when */ 321), __webpack_require__(/*! reconnecting-websocket */ 341)], __WEBPACK_AMD_DEFINE_RESULT__ = function (when, ReconnectingWebSocket) {
 	
 		var WsRpc = function WsRpc(server, path, port) {
 			var self = this;
@@ -28587,7 +28278,7 @@
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ },
-/* 347 */
+/* 343 */
 /*!*******************************!*\
   !*** ../lib/indyva-js/hub.js ***!
   \*******************************/
@@ -28595,7 +28286,7 @@
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';
 	
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! ./reconnecting-websocket */ 345)], __WEBPACK_AMD_DEFINE_RESULT__ = function (ReconnectingWebSocket) {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! ./reconnecting-websocket */ 341)], __WEBPACK_AMD_DEFINE_RESULT__ = function (ReconnectingWebSocket) {
 	
 				var Hub = function Hub(server, port, rpc, gateway) {
 							var self = this;
@@ -28702,6 +28393,339 @@
 	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ },
+/* 344 */
+/*!******************!*\
+  !*** ./card.jsx ***!
+  \******************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _lodash = __webpack_require__(/*! lodash */ 2);
+	
+	var _lodash2 = _interopRequireDefault(_lodash);
+	
+	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 67);
+	
+	var Card = _react2['default'].createClass({
+	  displayName: 'Card',
+	
+	  PropTypes: {
+	    onHeaderClick: _react.PropTypes.func.isRequired,
+	    onAttrLabelChanged: _react.PropTypes.func.isRequired,
+	    onAttrTypeChanged: _react.PropTypes.func.isRequired,
+	    attrLabel: _react.PropTypes.string.isRequired,
+	    attrType: _react.PropTypes.string.isRequired,
+	    order: _react.PropTypes.number.isRequired,
+	    expanded: _react.PropTypes.bool.isRequired
+	  },
+	  shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	    return !_lodash2['default'].isEqual(nextProps, this.props, function (x, y) {
+	      if (_lodash2['default'].isFunction(x)) {
+	        return true;
+	      }
+	    });
+	  },
+	  render: function render() {
+	    var _this = this;
+	
+	    var props = this.props;
+	
+	    var cardClasses = _react2['default'].addons.classSet({
+	      'card': true,
+	      'expanded': this.props.expanded
+	    });
+	    var contentClasses = _react2['default'].addons.classSet({
+	      'card-content': true,
+	      'hidden': !this.props.expanded
+	    });
+	    return _react2['default'].createElement(
+	      'div',
+	      { className: cardClasses },
+	      _react2['default'].createElement(
+	        'div',
+	        { className: 'btn btn-xs btn-default card-anchor card-move' },
+	        _react2['default'].createElement('span', { className: 'icon glyphicon glyphicon-move' })
+	      ),
+	      _react2['default'].createElement(
+	        'div',
+	        { className: 'card-header', onClick: function (ev) {
+	            _this.props.onHeaderClick(ev);
+	          } },
+	        _react2['default'].createElement(
+	          'span',
+	          { className: 'card-title' },
+	          props.order + ".- " + props.attrLabel
+	        ),
+	        _react2['default'].createElement(
+	          'span',
+	          { className: 'pull-right text-muted' },
+	          ' ',
+	          _lodash2['default'].startCase(props.attrType.toLowerCase()),
+	          '  '
+	        )
+	      ),
+	      _react2['default'].createElement(
+	        'div',
+	        { className: contentClasses },
+	        _react2['default'].createElement(
+	          'form',
+	          { className: 'form-horizontal', onSubmit: function (ev) {
+	              ev.preventDefault();
+	            } },
+	          _react2['default'].createElement(_reactBootstrap.Input, { type: 'text', label: 'Name', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
+	            value: props.attrLabel, onChange: props.onAttrLabelChanged }),
+	          _react2['default'].createElement(
+	            _reactBootstrap.Input,
+	            { type: 'select', label: 'Attribute Type', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
+	              value: props.attrType, onChange: props.onAttrTypeChanged },
+	            _react2['default'].createElement(
+	              'option',
+	              { value: 'QUANTITATIVE' },
+	              'Quantitative'
+	            ),
+	            _react2['default'].createElement(
+	              'option',
+	              { value: 'CATEGORICAL' },
+	              'Categorical'
+	            ),
+	            _react2['default'].createElement(
+	              'option',
+	              { value: 'ORDINAL' },
+	              'Ordinal'
+	            )
+	          )
+	        )
+	      )
+	    );
+	  }
+	});
+	
+	exports['default'] = Card;
+	module.exports = exports['default'];
+
+/***/ },
+/* 345 */
+/*!*********************!*\
+  !*** ./toolbar.jsx ***!
+  \*********************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 67);
+	
+	var ToolBar = _react2['default'].createClass({
+	    displayName: 'ToolBar',
+	
+	    getDefaultProps: function getDefaultProps() {
+	        return {
+	            startAnalysisEnabled: true
+	        };
+	    },
+	    PropTypes: {
+	        onUndoClick: _react.PropTypes.func.isRequired,
+	        onRedoClick: _react.PropTypes.func.isRequired,
+	        onStartAnalysisClick: _react.PropTypes.func.isRequired,
+	        startAnalysisEnabled: _react.PropTypes.bool.isRequired
+	    },
+	    render: function render() {
+	        var _this = this;
+	
+	        return _react2['default'].createElement(
+	            _reactBootstrap.Navbar,
+	            { brand: 'Lobby', fixedTop: true },
+	            _react2['default'].createElement(
+	                _reactBootstrap.Nav,
+	                { navbar: true, right: true },
+	                _react2['default'].createElement(
+	                    _reactBootstrap.NavItem,
+	                    { eventKey: 1, onClick: this.props.onUndoClick },
+	                    _react2['default'].createElement('span', { className: 'glyphicon glyphicon-backward' }),
+	                    ' ',
+	                    _react2['default'].createElement(
+	                        'span',
+	                        null,
+	                        'Undo'
+	                    )
+	                ),
+	                _react2['default'].createElement(
+	                    _reactBootstrap.NavItem,
+	                    { eventKey: 2, onClick: this.props.onRedoClick },
+	                    _react2['default'].createElement(
+	                        'span',
+	                        null,
+	                        'Redo'
+	                    ),
+	                    ' ',
+	                    _react2['default'].createElement('span', { className: 'glyphicon glyphicon-forward' })
+	                ),
+	                _react2['default'].createElement(
+	                    'div',
+	                    { className: 'navbar-form navbar-left' },
+	                    _react2['default'].createElement(
+	                        _reactBootstrap.Button,
+	                        { bsStyle: 'primary',
+	                            disabled: !this.props.startAnalysisEnabled,
+	                            onClick: function () {
+	                                if (_this.props.startAnalysisEnabled) _this.props.onStartAnalysisClick();
+	                            } },
+	                        'Start the Anlaysis'
+	                    )
+	                )
+	            )
+	        );
+	    }
+	});
+	
+	exports['default'] = ToolBar;
+	module.exports = exports['default'];
+
+/***/ },
+/* 346 */
+/*!********************!*\
+  !*** ./loader.jsx ***!
+  \********************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactRedux = __webpack_require__(/*! react-redux */ 299);
+	
+	var _lodash = __webpack_require__(/*! lodash */ 2);
+	
+	var _lodash2 = _interopRequireDefault(_lodash);
+	
+	var _remote = __webpack_require__(/*! remote */ 45);
+	
+	var _remote2 = _interopRequireDefault(_remote);
+	
+	var _path = __webpack_require__(/*! path */ 347);
+	
+	var _path2 = _interopRequireDefault(_path);
+	
+	var _context = __webpack_require__(/*! context */ 320);
+	
+	var _context2 = _interopRequireDefault(_context);
+	
+	var _fileDropper = __webpack_require__(/*! ./fileDropper */ 348);
+	
+	var _fileDropper2 = _interopRequireDefault(_fileDropper);
+	
+	var _actions = __webpack_require__(/*! ./actions */ 319);
+	
+	var fs = _remote2['default'].require('fs');
+	
+	var config = _remote2['default'].getGlobal('configuration');
+	
+	var Loader = (function (_React$Component) {
+	    _inherits(Loader, _React$Component);
+	
+	    function Loader(props) {
+	        _classCallCheck(this, Loader);
+	
+	        _get(Object.getPrototypeOf(Loader.prototype), 'constructor', this).call(this, props);
+	        var argv = _remote2['default'].process.argv.slice(2);
+	        if (argv.length !== 0) {
+	            this.readTable(argv[0]);
+	        }
+	        console.log(this.props);
+	    }
+	
+	    _createClass(Loader, [{
+	        key: 'readTable',
+	        value: function readTable(filePath) {
+	            var _props = this.props;
+	            var dispatch = _props.dispatch;
+	            var history = _props.history;
+	
+	            var rpc = _context2['default'].instance().rpc;
+	            var destination = _path2['default'].join(config.destinationPath, _path2['default'].basename(filePath));
+	
+	            try {
+	                if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
+	            } catch (e) {}
+	            fs.symlinkSync(filePath, destination);
+	
+	            dispatch((0, _actions.loadTable)("mainTable", destination)).then(function () {
+	                history.pushState(history.state, "/editor");
+	            });
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this = this;
+	
+	            return _react2['default'].createElement(
+	                _fileDropper2['default'],
+	                { onFileDrop: function (filePath) {
+	                        _this.readTable(filePath);
+	                    } },
+	                _react2['default'].createElement(
+	                    'span',
+	                    null,
+	                    ' Drop here a CSV file '
+	                )
+	            );
+	        }
+	    }]);
+	
+	    return Loader;
+	})(_react2['default'].Component);
+	
+	exports['default'] = (0, _reactRedux.connect)(function (state) {
+	    return state;
+	})(Loader);
+	module.exports = exports['default'];
+
+/***/ },
+/* 347 */
+/*!***********************!*\
+  !*** external "path" ***!
+  \***********************/
+/***/ function(module, exports) {
+
+	module.exports = require("path");
+
+/***/ },
 /* 348 */
 /*!*************************!*\
   !*** ./fileDropper.jsx ***!
@@ -28784,11 +28808,7 @@
 	          onDrop: function (e) {
 	            _this.onFileDrop(e);
 	          } },
-	        _react2['default'].createElement(
-	          'span',
-	          null,
-	          ' Drop here a CSV file '
-	        )
+	        this.props.children
 	      );
 	    }
 	  }]);
@@ -28838,6 +28858,10 @@
 	
 	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 67);
 	
+	var _path = __webpack_require__(/*! path */ 347);
+	
+	var _path2 = _interopRequireDefault(_path);
+	
 	var _testedListItem = __webpack_require__(/*! ./testedListItem */ 350);
 	
 	var _testedListItem2 = _interopRequireDefault(_testedListItem);
@@ -28857,8 +28881,10 @@
 	        _get(Object.getPrototypeOf(Launcher.prototype), 'constructor', this).call(this, props);
 	        this._renameColumns(props)
 	        //TODO: .then((x) => {this._renameCategoricalValues(props);})
-	        .then(function (x) {
-	            _this._createFinalTable(props);
+	        .then(function () {
+	            return _this._createFinalTable(props);
+	        }).then(function () {
+	            _this._writeFinalTable(props);
 	        });
 	    }
 	
@@ -28884,6 +28910,12 @@
 	                })
 	            };
 	            return props.dispatch((0, _actions.createNewTable)(config.indyvaTableName, sourceTable, schema));
+	        }
+	    }, {
+	        key: '_writeFinalTable',
+	        value: function _writeFinalTable(props) {
+	            var filePath = _path2['default'].join(config.destinationPath, config.indyvaTableName + '.csv');
+	            return props.dispatch((0, _actions.writeTable)(config.indyvaTableName, filePath));
 	        }
 	    }, {
 	        key: 'render',

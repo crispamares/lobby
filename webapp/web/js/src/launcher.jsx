@@ -3,9 +3,10 @@ import { connect } from 'react-redux';
 import _ from "lodash";
 import remote from 'remote';
 import {Button, ListGroup} from 'react-bootstrap';
+import path from 'path';
 
 import TestedListItem from './testedListItem';
-import {renameColumns, createNewTable} from './actions';
+import {renameColumns, createNewTable, writeTable} from './actions';
 
 const config = remote.getGlobal('configuration');
 
@@ -14,7 +15,8 @@ class Launcher extends React.Component {
         super(props);
         this._renameColumns(props)
         //TODO: .then((x) => {this._renameCategoricalValues(props);})
-        .then((x) => {this._createFinalTable(props);});
+        .then(() => {return this._createFinalTable(props);})
+        .then(() => {this._writeFinalTable(props)});
     }
     _renameColumns(props) {
         let namesMap = {};
@@ -32,6 +34,10 @@ class Launcher extends React.Component {
                 (attr) => _.omit(attr, ["label", "name"]))
         };
         return props.dispatch(createNewTable(config.indyvaTableName, sourceTable, schema));
+    }
+    _writeFinalTable(props) {
+        let filePath = path.join(config.destinationPath, config.indyvaTableName + '.csv');
+        return props.dispatch(writeTable(config.indyvaTableName, filePath));
     }
     render () {
         let renamingState = this.props.table.renamingState;

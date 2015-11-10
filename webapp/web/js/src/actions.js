@@ -7,6 +7,10 @@ export const SET_ATTR_TYPE = 'SET_ATTR_TYPE';
 export const FILL_FROM_SCHEMA = 'FILL_FROM_SCHEMA';
 export const INIT_CARDS = 'INIT_CARDS';
 
+export const LOAD_TABLE_REQUEST = 'LOAD_TABLE_REQUEST';
+export const LOAD_TABLE_FAILURE = 'LOAD_TABLE_FAILURE';
+export const LOAD_TABLE_SUCCESS = 'LOAD_TABLE_SUCCESS';
+
 export const RENAME_COLUMNS_REQUEST = 'RENAME_COLUMNS_REQUEST';
 export const RENAME_COLUMNS_FAILURE = 'RENAME_COLUMNS_FAILURE';
 export const RENAME_COLUMNS_SUCCESS = 'RENAME_COLUMNS_SUCCESS';
@@ -15,6 +19,9 @@ export const CREATE_NEW_TABLE_REQUEST = 'CREATE_NEW_TABLE_REQUEST';
 export const CREATE_NEW_TABLE_FAILURE = 'CREATE_NEW_TABLE_FAILURE';
 export const CREATE_NEW_TABLE_SUCCESS = 'CREATE_NEW_TABLE_SUCCESS';
 
+export const WRITE_TABLE_REQUEST = 'WRITE_TABLE_REQUEST';
+export const WRITE_TABLE_FAILURE = 'WRITE_TABLE_FAILURE';
+export const WRITE_TABLE_SUCCESS = 'WRITE_TABLE_SUCCESS';
 
 export function setOrder(order) {
     return {type: SET_ORDER, order};
@@ -41,48 +48,62 @@ export function fillFromSchema(schema) {
 }
 
 
-export function renameColumnsRequest(namesMap) {
-    return {type: RENAME_COLUMNS_REQUEST};
-}
-export function renameColumnsSuccess(namesMap) {
-    return {type: RENAME_COLUMNS_SUCCESS, namesMap};
-}
-export function renameColumnsFailure(namesMap, error) {
-    return {type: RENAME_COLUMNS_FAILURE, namesMap, error};
-}
-
 export function renameColumns(tableName, namesMap) {
     const rpc = Context.instance().rpc;
+    if (_.isEmpty(namesMap)) {
+        /* If nothing has to be renamed, dispatch a success */
+        return (dispatch) => {
+            return Promise.resolve(dispatch({type: RENAME_COLUMNS_SUCCESS, namesMap}));
+        }
+    }
     return (dispatch) => {
-        dispatch(renameColumnsRequest(namesMap));
+        dispatch({type: RENAME_COLUMNS_REQUEST});
 
         return rpc.call("TableSrv.rename_columns", [tableName, namesMap])
-        .then(() => dispatch(renameColumnsSuccess(namesMap)))
-        .otherwise((error) => dispatch(renameColumnsFailure(namesMap, error)))
+        .then(() => dispatch({type: RENAME_COLUMNS_SUCCESS, namesMap}))
+        .otherwise((error) => dispatch({type: RENAME_COLUMNS_FAILURE, namesMap, error}))
     }
-}
-
-export function createNewTableRequest() {
-    return {type: CREATE_NEW_TABLE_REQUEST}
-}
-export function createNewTableSuccess() {
-    return {type: CREATE_NEW_TABLE_SUCCESS}
-}
-export function createNewTableFailure(error) {
-    return {type: CREATE_NEW_TABLE_FAILURE, error}
 }
 
 
 export function createNewTable(name, sourceTable, schema) {
     const rpc = Context.instance().rpc;
     return (dispatch) => {
-        dispatch(createNewTableRequest())
+        dispatch({type: CREATE_NEW_TABLE_REQUEST})
 
         return rpc.call("TableSrv.get_data", [sourceTable])
         .then( (data) => {
             return rpc.call("TableSrv.new_table", [name, data, schema])
         })
-        .then(() => dispatch(createNewTableSuccess()))
-        .otherwise((error) => dispatch(createNewTableFailure(error)))
+        .then(() => dispatch({type: CREATE_NEW_TABLE_SUCCESS}))
+        .otherwise((error) => dispatch({type: CREATE_NEW_TABLE_FAILURE, error}));
+    }
+}
+
+
+export function loadTable(tableName, destination) {
+    const rpc = Context.instance().rpc;
+    return (dispatch) => {
+        dispatch({type: LOAD_TABLE_REQUEST});
+
+        return rpc.call("IOSrv.read_csv", [tableName, destination]).then(
+            table => { return rpc.call("TableSrv.schema", [table]) })
+        .then( schema => {
+            dispatch({type: LOAD_TABLE_SUCCESS})
+            dispatch(fillFromSchema(schema));
+            dispatch(initCards(schema.attributes));
+        })
+        .otherwise( error => { dispatch({type: LOAD_TABLE_FAILURE, error}) });
+    }
+}
+
+export function writeTable(tableName, filePath) {
+    const rpc = Context.instance().rpc;
+    return (dispatch) => {
+        dispatch({type: WRITE_TABLE_REQUEST});
+
+        return rpc.call("IOSrv.write_csv", [tableName, filePath])
+        .then( () => { dispatch({type: WRITE_TABLE_SUCCESS}) })
+        .otherwise( error => { dispatch({type: WRITE_TABLE_FAILURE, error}) });
     }
 }
