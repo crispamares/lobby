@@ -29,12 +29,15 @@ class Launcher extends React.Component {
     _createFinalTable(props) {
         const name = config.indyvaTableName;
         const sourceTable = props.table.tableName;
+        const attributes = props.attributes.present.attrsByName;
         const schema = {
             dataset_type: "TABLE",
             index: props.attributes.present.index,
-            attributes: _.mapValues(props.attributes.present.attrsByName,
-                (attr) => _.omit(attr, ["label", "name"])),
-            order: props.attributes.present.order
+            attributes: _.chain(attributes)
+                .mapKeys((attr, name) => attr.label)
+                .mapValues((attr) => _.omit(attr, ["label", "name"]))
+                .value(),
+            order: _.map(props.attributes.present.order, (attr) => attributes[attr].label)
         };
         return props.dispatch(createNewTable(config.indyvaTableName, sourceTable, schema));
     }
@@ -48,12 +51,14 @@ class Launcher extends React.Component {
     render () {
         let renamingState = this.props.table.renamingState;
         let categoricalValuesState = "waiting";
-        let finalTableState = this.props.table.creatingNewTableState;
-        let indyvaState = "waiting";
+        let finalTableState = this.props.table.writingTableState;
+        let indyvaState = this.props.table.configuringIndyvaState;
 
         const ready = (
             this.props.table.renamingState === "success" &&
-            this.props.table.creatingNewTableState === "success"
+            this.props.table.creatingNewTableState === "success" &&
+            this.props.table.writingTableState === "success" &&
+            this.props.table.configuringIndyvaState === "success"
         );
         return (
             <div className="launcher col-sm-6 col-sm-offset-3">

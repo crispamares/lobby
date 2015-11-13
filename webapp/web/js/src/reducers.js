@@ -3,7 +3,10 @@ import _ from "lodash";
 import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
     TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS,
     RENAME_COLUMNS_REQUEST, RENAME_COLUMNS_FAILURE, RENAME_COLUMNS_SUCCESS,
-    CREATE_NEW_TABLE_REQUEST, CREATE_NEW_TABLE_FAILURE, CREATE_NEW_TABLE_SUCCESS}
+    CREATE_NEW_TABLE_REQUEST, CREATE_NEW_TABLE_FAILURE, CREATE_NEW_TABLE_SUCCESS,
+    WRITE_TABLE_REQUEST, WRITE_TABLE_FAILURE, WRITE_TABLE_SUCCESS,
+    CONFIG_INDYVA_REQUEST, CONFIG_INDYVA_FAILURE, CONFIG_INDYVA_SUCCESS,
+}
     from './actions';
 import undoable, {excludeAction} from 'redux-undo';
 
@@ -59,6 +62,19 @@ function table(state={}, action) {
             return _.assign({}, state, {creatingNewTableState: "error"});
         case CREATE_NEW_TABLE_SUCCESS:
             return _.assign({}, state, {creatingNewTableState: "success"});
+        case WRITE_TABLE_REQUEST:
+            return _.assign({}, state, {writingTableState: "waiting"});
+        case WRITE_TABLE_FAILURE:
+            return _.assign({}, state, {writingTableState: "error"});
+        case WRITE_TABLE_SUCCESS:
+            return _.assign({}, state, {writingTableState: "success"});
+        case CONFIG_INDYVA_REQUEST:
+            return _.assign({}, state, {configuringIndyvaState: "waiting"});
+        case CONFIG_INDYVA_FAILURE:
+            return _.assign({}, state, {configuringIndyvaState: "error"});
+        case CONFIG_INDYVA_SUCCESS:
+            return _.assign({}, state, {configuringIndyvaState: "success"});
+
         default:
             return state;
     }

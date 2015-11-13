@@ -28925,13 +28925,18 @@
 	        value: function _createFinalTable(props) {
 	            var name = config.indyvaTableName;
 	            var sourceTable = props.table.tableName;
+	            var attributes = props.attributes.present.attrsByName;
 	            var schema = {
 	                dataset_type: "TABLE",
 	                index: props.attributes.present.index,
-	                attributes: _lodash2['default'].mapValues(props.attributes.present.attrsByName, function (attr) {
+	                attributes: _lodash2['default'].chain(attributes).mapKeys(function (attr, name) {
+	                    return attr.label;
+	                }).mapValues(function (attr) {
 	                    return _lodash2['default'].omit(attr, ["label", "name"]);
-	                }),
-	                order: props.attributes.present.order
+	                }).value(),
+	                order: _lodash2['default'].map(props.attributes.present.order, function (attr) {
+	                    return attributes[attr].label;
+	                })
 	            };
 	            return props.dispatch((0, _actions.createNewTable)(config.indyvaTableName, sourceTable, schema));
 	        }
@@ -28951,10 +28956,10 @@
 	        value: function render() {
 	            var renamingState = this.props.table.renamingState;
 	            var categoricalValuesState = "waiting";
-	            var finalTableState = this.props.table.creatingNewTableState;
-	            var indyvaState = "waiting";
+	            var finalTableState = this.props.table.writingTableState;
+	            var indyvaState = this.props.table.configuringIndyvaState;
 	
-	            var ready = this.props.table.renamingState === "success" && this.props.table.creatingNewTableState === "success";
+	            var ready = this.props.table.renamingState === "success" && this.props.table.creatingNewTableState === "success" && this.props.table.writingTableState === "success" && this.props.table.configuringIndyvaState === "success";
 	            return _react2['default'].createElement(
 	                'div',
 	                { className: 'launcher col-sm-6 col-sm-offset-3' },
@@ -29200,6 +29205,19 @@
 	            return _lodash2['default'].assign({}, state, { creatingNewTableState: "error" });
 	        case _actions.CREATE_NEW_TABLE_SUCCESS:
 	            return _lodash2['default'].assign({}, state, { creatingNewTableState: "success" });
+	        case _actions.WRITE_TABLE_REQUEST:
+	            return _lodash2['default'].assign({}, state, { writingTableState: "waiting" });
+	        case _actions.WRITE_TABLE_FAILURE:
+	            return _lodash2['default'].assign({}, state, { writingTableState: "error" });
+	        case _actions.WRITE_TABLE_SUCCESS:
+	            return _lodash2['default'].assign({}, state, { writingTableState: "success" });
+	        case _actions.CONFIG_INDYVA_REQUEST:
+	            return _lodash2['default'].assign({}, state, { configuringIndyvaState: "waiting" });
+	        case _actions.CONFIG_INDYVA_FAILURE:
+	            return _lodash2['default'].assign({}, state, { configuringIndyvaState: "error" });
+	        case _actions.CONFIG_INDYVA_SUCCESS:
+	            return _lodash2['default'].assign({}, state, { configuringIndyvaState: "success" });
+	
 	        default:
 	            return state;
 	    }
