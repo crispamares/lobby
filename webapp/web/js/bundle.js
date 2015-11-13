@@ -25159,6 +25159,7 @@
 	exports.createNewTable = createNewTable;
 	exports.loadTable = loadTable;
 	exports.writeTable = writeTable;
+	exports.configIndyva = configIndyva;
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
@@ -25207,6 +25208,13 @@
 	var WRITE_TABLE_SUCCESS = 'WRITE_TABLE_SUCCESS';
 	
 	exports.WRITE_TABLE_SUCCESS = WRITE_TABLE_SUCCESS;
+	var CONFIG_INDYVA_REQUEST = 'CONFIG_INDYVA_REQUEST';
+	exports.CONFIG_INDYVA_REQUEST = CONFIG_INDYVA_REQUEST;
+	var CONFIG_INDYVA_FAILURE = 'CONFIG_INDYVA_FAILURE';
+	exports.CONFIG_INDYVA_FAILURE = CONFIG_INDYVA_FAILURE;
+	var CONFIG_INDYVA_SUCCESS = 'CONFIG_INDYVA_SUCCESS';
+	
+	exports.CONFIG_INDYVA_SUCCESS = CONFIG_INDYVA_SUCCESS;
 	
 	function setOrder(order) {
 	    return { type: SET_ORDER, order: order };
@@ -25292,6 +25300,19 @@
 	            dispatch({ type: WRITE_TABLE_SUCCESS });
 	        }).otherwise(function (error) {
 	            dispatch({ type: WRITE_TABLE_FAILURE, error: error });
+	        });
+	    };
+	}
+	
+	function configIndyva(tableName) {
+	    var rpc = _context2['default'].instance().rpc;
+	    return function (dispatch) {
+	        dispatch({ type: CONFIG_INDYVA_REQUEST });
+	
+	        return rpc.call("config_app", [{ dataset: tableName }]).then(function () {
+	            dispatch({ type: CONFIG_INDYVA_SUCCESS });
+	        }).otherwise(function (error) {
+	            dispatch({ type: CONFIG_INDYVA_FAILURE, error: error });
 	        });
 	    };
 	}
@@ -28884,7 +28905,9 @@
 	        .then(function () {
 	            return _this._createFinalTable(props);
 	        }).then(function () {
-	            _this._writeFinalTable(props);
+	            return _this._writeFinalTable(props);
+	        }).then(function () {
+	            return _this._configIndyva(props);
 	        });
 	    }
 	
@@ -28907,7 +28930,8 @@
 	                index: props.attributes.present.index,
 	                attributes: _lodash2['default'].mapValues(props.attributes.present.attrsByName, function (attr) {
 	                    return _lodash2['default'].omit(attr, ["label", "name"]);
-	                })
+	                }),
+	                order: props.attributes.present.order
 	            };
 	            return props.dispatch((0, _actions.createNewTable)(config.indyvaTableName, sourceTable, schema));
 	        }
@@ -28916,6 +28940,11 @@
 	        value: function _writeFinalTable(props) {
 	            var filePath = _path2['default'].join(config.destinationPath, config.indyvaTableName + '.csv');
 	            return props.dispatch((0, _actions.writeTable)(config.indyvaTableName, filePath));
+	        }
+	    }, {
+	        key: '_configIndyva',
+	        value: function _configIndyva(props) {
+	            return props.dispatch((0, _actions.configIndyva)(config.indyvaTableName));
 	        }
 	    }, {
 	        key: 'render',

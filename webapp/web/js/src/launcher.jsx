@@ -6,7 +6,8 @@ import {Button, ListGroup} from 'react-bootstrap';
 import path from 'path';
 
 import TestedListItem from './testedListItem';
-import {renameColumns, createNewTable, writeTable} from './actions';
+import {renameColumns, createNewTable, writeTable,
+     configIndyva} from './actions';
 
 const config = remote.getGlobal('configuration');
 
@@ -16,7 +17,8 @@ class Launcher extends React.Component {
         this._renameColumns(props)
         //TODO: .then((x) => {this._renameCategoricalValues(props);})
         .then(() => {return this._createFinalTable(props);})
-        .then(() => {this._writeFinalTable(props)});
+        .then(() => {return this._writeFinalTable(props)})
+        .then(() => {return this._configIndyva(props)});
     }
     _renameColumns(props) {
         let namesMap = {};
@@ -31,13 +33,17 @@ class Launcher extends React.Component {
             dataset_type: "TABLE",
             index: props.attributes.present.index,
             attributes: _.mapValues(props.attributes.present.attrsByName,
-                (attr) => _.omit(attr, ["label", "name"]))
+                (attr) => _.omit(attr, ["label", "name"])),
+            order: props.attributes.present.order
         };
         return props.dispatch(createNewTable(config.indyvaTableName, sourceTable, schema));
     }
     _writeFinalTable(props) {
         let filePath = path.join(config.destinationPath, config.indyvaTableName + '.csv');
         return props.dispatch(writeTable(config.indyvaTableName, filePath));
+    }
+    _configIndyva(props) {
+        return props.dispatch(configIndyva(config.indyvaTableName));
     }
     render () {
         let renamingState = this.props.table.renamingState;

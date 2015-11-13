@@ -23,6 +23,10 @@ export const WRITE_TABLE_REQUEST = 'WRITE_TABLE_REQUEST';
 export const WRITE_TABLE_FAILURE = 'WRITE_TABLE_FAILURE';
 export const WRITE_TABLE_SUCCESS = 'WRITE_TABLE_SUCCESS';
 
+export const CONFIG_INDYVA_REQUEST = 'CONFIG_INDYVA_REQUEST';
+export const CONFIG_INDYVA_FAILURE = 'CONFIG_INDYVA_FAILURE';
+export const CONFIG_INDYVA_SUCCESS = 'CONFIG_INDYVA_SUCCESS';
+
 export function setOrder(order) {
     return {type: SET_ORDER, order};
 }
@@ -105,5 +109,17 @@ export function writeTable(tableName, filePath) {
         return rpc.call("IOSrv.write_csv", [tableName, filePath])
         .then( () => { dispatch({type: WRITE_TABLE_SUCCESS}) })
         .otherwise( error => { dispatch({type: WRITE_TABLE_FAILURE, error}) });
+    }
+}
+
+
+export function configIndyva(tableName) {
+    const rpc = Context.instance().rpc;
+    return (dispatch) => {
+        dispatch({type: CONFIG_INDYVA_REQUEST});
+
+        return rpc.call("config_app", [{dataset: tableName}])
+        .then( () => { dispatch({type: CONFIG_INDYVA_SUCCESS}) })
+        .otherwise( error => { dispatch({type: CONFIG_INDYVA_FAILURE, error}) });
     }
 }
