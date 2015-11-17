@@ -23,10 +23,10 @@ export default class DatasetList extends React.Component {
                       return (
                           <li className="list-group-item">
                               <ButtonGroup>
-                                  <Button bsStyle="primary" onClick={() => onLaunchClick(dataset)}> Launch </Button>
-                                  <Button onClick={() => onEditClick(dataset)}> Edit </Button>
+                                  <Button bsStyle="primary" bsSixe="small" onClick={() => onLaunchClick(dataset)}> Launch </Button>
+                                  <Button bsSixe="small" onClick={() => onEditClick(dataset)}> Edit </Button>
                               </ButtonGroup>
-                              <span className="h4"> {dataset} </span>
+                              <span className="h4" style={{marginLeft: 10}}> {dataset} </span>
                           </li>
                       )
                   })}
