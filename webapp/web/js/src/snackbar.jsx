@@ -16,12 +16,12 @@ class Snackbar extends React.Component {
     render () {
         const {msg, msgStyle, dismissed} = this.props;
         const onDismiss = this.onDismiss.bind(this);
-        
+
         if ( dismissed === true || dismissed === undefined ) {
             return (<div></div>)
         } else {
             return (
-                <div style={ {position: "fixed", right: 50, top: 50} }>
+                <div>
                     <Alert bsStyle={msgStyle} onDismiss={onDismiss}>
                         {msg}
                     </Alert>

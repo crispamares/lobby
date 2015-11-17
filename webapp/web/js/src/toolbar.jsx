@@ -30,10 +30,10 @@ const ToolBar = React.createClass({
                             Start the Anlaysis
                         </Button>
                     </div>
-            </Nav>
-        </Navbar>
-    )
-}
+                </Nav>
+            </Navbar>
+        )
+    }
 })
 
 export default ToolBar

@@ -5,6 +5,8 @@ import remote from 'remote';
 let fs = remote.require('fs');
 import path from 'path';
 
+import {Navbar} from 'react-bootstrap';
+
 import FileDropper from './fileDropper';
 import DatasetList from './datasetList';
 
@@ -63,6 +65,7 @@ class Loader extends React.Component {
         const onEditClick = this.readTableFromDestination.bind(this);
         return (
             <div>
+                <Navbar brand="Lobby" fixedTop></Navbar>
                 <DatasetList datasets={datasets}
                     onLaunchClick={onLaunchClick}
                     onEditClick={onEditClick}/>
