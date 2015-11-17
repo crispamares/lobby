@@ -51,6 +51,12 @@ function cards(state={}, action) {
 
 function table(state={}, action) {
     switch (action.type) {
+        case LOAD_TABLE_REQUEST:
+            return _.assign({}, state, {loadingTableState: "waiting"});
+        case LOAD_TABLE_FAILURE:
+            return _.assign({}, state, {loadingTableState: "error"});
+        case LOAD_TABLE_SUCCESS:
+            return _.assign({}, state, {loadingTableState: "success"});
         case RENAME_COLUMNS_REQUEST:
             return _.assign({}, state, {renamingState: "waiting"});
         case RENAME_COLUMNS_FAILURE:

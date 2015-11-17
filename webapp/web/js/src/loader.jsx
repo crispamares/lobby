@@ -49,14 +49,20 @@ class Loader extends React.Component {
         fs.symlinkSync( filePath, destination);
 
         dispatch(loadTable("mainTable", destination))
-        .then(() => {history.pushState(history.state, "/editor");} );
+        .then(() => {
+            if (this.props.table.loadingTableState === "error") return;
+            history.pushState(history.state, "/editor");
+        } );
     }
     readTableFromDestination (dataset) {
         let {dispatch, history} = this.props;
         let destination = path.join(config.destinationPath, dataset + ".csv");
 
         dispatch(loadTable("mainTable", destination))
-        .then(() => {history.pushState(history.state, "/editor");} );
+        .then(() => {
+            if (this.props.table.loadingTableState === "error") return;
+            history.pushState(history.state, "/editor");
+        } );
 
     }
     render () {

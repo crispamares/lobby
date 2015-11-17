@@ -28815,6 +28815,8 @@
 	    }, {
 	        key: 'readTable',
 	        value: function readTable(filePath) {
+	            var _this = this;
+	
 	            var _props = this.props;
 	            var dispatch = _props.dispatch;
 	            var history = _props.history;
@@ -28827,12 +28829,15 @@
 	            fs.symlinkSync(filePath, destination);
 	
 	            dispatch((0, _actions.loadTable)("mainTable", destination)).then(function () {
+	                if (_this.props.table.loadingTableState === "error") return;
 	                history.pushState(history.state, "/editor");
 	            });
 	        }
 	    }, {
 	        key: 'readTableFromDestination',
 	        value: function readTableFromDestination(dataset) {
+	            var _this2 = this;
+	
 	            var _props2 = this.props;
 	            var dispatch = _props2.dispatch;
 	            var history = _props2.history;
@@ -28840,13 +28845,14 @@
 	            var destination = _path2['default'].join(config.destinationPath, dataset + ".csv");
 	
 	            dispatch((0, _actions.loadTable)("mainTable", destination)).then(function () {
+	                if (_this2.props.table.loadingTableState === "error") return;
 	                history.pushState(history.state, "/editor");
 	            });
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this = this;
+	            var _this3 = this;
 	
 	            var datasets = this.listAvailableDatasets(config.destinationPath);
 	            var onLaunchClick = this._launchIndyva.bind(this, this.props.dispatch);
@@ -28861,7 +28867,7 @@
 	                _react2['default'].createElement(
 	                    _fileDropper2['default'],
 	                    { onFileDrop: function (filePath) {
-	                            _this.readTable(filePath);
+	                            _this3.readTable(filePath);
 	                        } },
 	                    _react2['default'].createElement(
 	                        'span',
@@ -29442,6 +29448,12 @@
 	    if (state === undefined) state = {};
 	
 	    switch (action.type) {
+	        case _actions.LOAD_TABLE_REQUEST:
+	            return _lodash2['default'].assign({}, state, { loadingTableState: "waiting" });
+	        case _actions.LOAD_TABLE_FAILURE:
+	            return _lodash2['default'].assign({}, state, { loadingTableState: "error" });
+	        case _actions.LOAD_TABLE_SUCCESS:
+	            return _lodash2['default'].assign({}, state, { loadingTableState: "success" });
 	        case _actions.RENAME_COLUMNS_REQUEST:
 	            return _lodash2['default'].assign({}, state, { renamingState: "waiting" });
 	        case _actions.RENAME_COLUMNS_FAILURE:
