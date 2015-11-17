@@ -6,6 +6,7 @@ export const SET_ATTR_LABEL = 'SET_ATTR_LABEL';
 export const SET_ATTR_TYPE = 'SET_ATTR_TYPE';
 export const FILL_FROM_SCHEMA = 'FILL_FROM_SCHEMA';
 export const INIT_CARDS = 'INIT_CARDS';
+export const DISMISS_MSG = 'DISMISS_MSG';
 
 export const LOAD_TABLE_REQUEST = 'LOAD_TABLE_REQUEST';
 export const LOAD_TABLE_FAILURE = 'LOAD_TABLE_FAILURE';
@@ -51,6 +52,9 @@ export function fillFromSchema(schema) {
     return {type: FILL_FROM_SCHEMA, schema};
 }
 
+export function dismissMsg() {
+    return {type: DISMISS_MSG};
+}
 
 export function renameColumns(tableName, namesMap) {
     const rpc = Context.instance().rpc;
@@ -85,12 +89,12 @@ export function createNewTable(name, sourceTable, schema) {
 }
 
 
-export function loadTable(tableName, destination) {
+export function loadTable(tableName, filePath) {
     const rpc = Context.instance().rpc;
     return (dispatch) => {
         dispatch({type: LOAD_TABLE_REQUEST});
 
-        return rpc.call("IOSrv.read_csv", [tableName, destination]).then(
+        return rpc.call("IOSrv.read_csv", [tableName, filePath]).then(
             table => { return rpc.call("TableSrv.schema", [table]) })
         .then( schema => {
             dispatch({type: LOAD_TABLE_SUCCESS})

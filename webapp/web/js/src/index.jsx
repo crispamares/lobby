@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { Router, Route, Link, IndexRoute } from 'react-router';
 import remote from 'remote';
 
+import Snackbar from './snackbar';
 import Editor from './editor';
 import Loader from './loader';
 import Launcher from './launcher';
@@ -37,6 +38,7 @@ class App extends React.Component {
     render() {
         return (
             <div>
+                <Snackbar></Snackbar>
                 <div className="row">
                     <div className="col-sm-12">
                         { this.props.children }

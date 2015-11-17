@@ -73,6 +73,10 @@
 	
 	var _remote2 = _interopRequireDefault(_remote);
 	
+	var _snackbar = __webpack_require__(/*! ./snackbar */ 354);
+	
+	var _snackbar2 = _interopRequireDefault(_snackbar);
+	
 	var _editor = __webpack_require__(/*! ./editor */ 46);
 	
 	var _editor2 = _interopRequireDefault(_editor);
@@ -81,19 +85,19 @@
 	
 	var _loader2 = _interopRequireDefault(_loader);
 	
-	var _launcher = __webpack_require__(/*! ./launcher */ 349);
+	var _launcher = __webpack_require__(/*! ./launcher */ 350);
 	
 	var _launcher2 = _interopRequireDefault(_launcher);
 	
 	var _redux = __webpack_require__(/*! redux */ 307);
 	
-	var _reduxThunk = __webpack_require__(/*! redux-thunk */ 351);
+	var _reduxThunk = __webpack_require__(/*! redux-thunk */ 352);
 	
 	var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
 	
 	var _reactRedux = __webpack_require__(/*! react-redux */ 299);
 	
-	var _reducers = __webpack_require__(/*! ./reducers */ 352);
+	var _reducers = __webpack_require__(/*! ./reducers */ 353);
 	
 	var _reducers2 = _interopRequireDefault(_reducers);
 	
@@ -136,6 +140,7 @@
 	            return _react2['default'].createElement(
 	                'div',
 	                null,
+	                _react2['default'].createElement(_snackbar2['default'], null),
 	                _react2['default'].createElement(
 	                    'div',
 	                    { className: 'row' },
@@ -25155,6 +25160,7 @@
 	exports.setAttrLabel = setAttrLabel;
 	exports.setAttrType = setAttrType;
 	exports.fillFromSchema = fillFromSchema;
+	exports.dismissMsg = dismissMsg;
 	exports.renameColumns = renameColumns;
 	exports.createNewTable = createNewTable;
 	exports.loadTable = loadTable;
@@ -25178,8 +25184,10 @@
 	var FILL_FROM_SCHEMA = 'FILL_FROM_SCHEMA';
 	exports.FILL_FROM_SCHEMA = FILL_FROM_SCHEMA;
 	var INIT_CARDS = 'INIT_CARDS';
-	
 	exports.INIT_CARDS = INIT_CARDS;
+	var DISMISS_MSG = 'DISMISS_MSG';
+	
+	exports.DISMISS_MSG = DISMISS_MSG;
 	var LOAD_TABLE_REQUEST = 'LOAD_TABLE_REQUEST';
 	exports.LOAD_TABLE_REQUEST = LOAD_TABLE_REQUEST;
 	var LOAD_TABLE_FAILURE = 'LOAD_TABLE_FAILURE';
@@ -25240,6 +25248,10 @@
 	    return { type: FILL_FROM_SCHEMA, schema: schema };
 	}
 	
+	function dismissMsg() {
+	    return { type: DISMISS_MSG };
+	}
+	
 	function renameColumns(tableName, namesMap) {
 	    var rpc = _context2['default'].instance().rpc;
 	    if (_.isEmpty(namesMap)) {
@@ -25274,12 +25286,12 @@
 	    };
 	}
 	
-	function loadTable(tableName, destination) {
+	function loadTable(tableName, filePath) {
 	    var rpc = _context2['default'].instance().rpc;
 	    return function (dispatch) {
 	        dispatch({ type: LOAD_TABLE_REQUEST });
 	
-	        return rpc.call("IOSrv.read_csv", [tableName, destination]).then(function (table) {
+	        return rpc.call("IOSrv.read_csv", [tableName, filePath]).then(function (table) {
 	            return rpc.call("TableSrv.schema", [table]);
 	        }).then(function (schema) {
 	            dispatch({ type: LOAD_TABLE_SUCCESS });
@@ -28663,13 +28675,13 @@
 	
 	var _path2 = _interopRequireDefault(_path);
 	
-	var _context = __webpack_require__(/*! context */ 320);
-	
-	var _context2 = _interopRequireDefault(_context);
-	
 	var _fileDropper = __webpack_require__(/*! ./fileDropper */ 348);
 	
 	var _fileDropper2 = _interopRequireDefault(_fileDropper);
+	
+	var _datasetList = __webpack_require__(/*! ./datasetList */ 349);
+	
+	var _datasetList2 = _interopRequireDefault(_datasetList);
 	
 	var _actions = __webpack_require__(/*! ./actions */ 319);
 	
@@ -28688,17 +28700,38 @@
 	        if (argv.length !== 0) {
 	            this.readTable(argv[0]);
 	        }
-	        console.log(this.props);
 	    }
 	
 	    _createClass(Loader, [{
+	        key: 'listAvailableDatasets',
+	        value: function listAvailableDatasets(dirPath) {
+	            var files = fs.readdirSync(dirPath);
+	            var schemas = _lodash2['default'].filter(files, function (fileName) {
+	                return _lodash2['default'].endsWith(fileName, "_schema.json");
+	            });
+	            var datasets = [];
+	            schemas.forEach(function (schema) {
+	                if (files.indexOf(schema.replace("_schema.json", ".csv")) > -1) {
+	                    datasets.push(schema.replace("_schema.json", ""));
+	                }
+	            });
+	            console.log("Available datasets:", datasets);
+	            return datasets;
+	        }
+	    }, {
+	        key: '_launchIndyva',
+	        value: function _launchIndyva(dispatch, dataset) {
+	            dispatch((0, _actions.configIndyva)(dataset)).then(function () {
+	                window.location = config.afterLobbyAppUrl;
+	            });
+	        }
+	    }, {
 	        key: 'readTable',
 	        value: function readTable(filePath) {
 	            var _props = this.props;
 	            var dispatch = _props.dispatch;
 	            var history = _props.history;
 	
-	            var rpc = _context2['default'].instance().rpc;
 	            var destination = _path2['default'].join(config.destinationPath, _path2['default'].basename(filePath));
 	
 	            try {
@@ -28711,19 +28744,42 @@
 	            });
 	        }
 	    }, {
+	        key: 'readTableFromDestination',
+	        value: function readTableFromDestination(dataset) {
+	            var _props2 = this.props;
+	            var dispatch = _props2.dispatch;
+	            var history = _props2.history;
+	
+	            var destination = _path2['default'].join(config.destinationPath, dataset + ".csv");
+	
+	            dispatch((0, _actions.loadTable)("mainTable", destination)).then(function () {
+	                history.pushState(history.state, "/editor");
+	            });
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
 	            var _this = this;
 	
+	            var datasets = this.listAvailableDatasets(config.destinationPath);
+	            var onLaunchClick = this._launchIndyva.bind(this, this.props.dispatch);
+	            var onEditClick = this.readTableFromDestination.bind(this);
 	            return _react2['default'].createElement(
-	                _fileDropper2['default'],
-	                { onFileDrop: function (filePath) {
-	                        _this.readTable(filePath);
-	                    } },
+	                'div',
+	                null,
+	                _react2['default'].createElement(_datasetList2['default'], { datasets: datasets,
+	                    onLaunchClick: onLaunchClick,
+	                    onEditClick: onEditClick }),
 	                _react2['default'].createElement(
-	                    'span',
-	                    null,
-	                    ' Drop here a CSV file '
+	                    _fileDropper2['default'],
+	                    { onFileDrop: function (filePath) {
+	                            _this.readTable(filePath);
+	                        } },
+	                    _react2['default'].createElement(
+	                        'span',
+	                        null,
+	                        ' Drop here a CSV file '
+	                    )
 	                )
 	            );
 	        }
@@ -28779,17 +28835,17 @@
 	
 	var _lodash2 = _interopRequireDefault(_lodash);
 	
-	var Loader = (function (_React$Component) {
-	  _inherits(Loader, _React$Component);
+	var FileDropper = (function (_React$Component) {
+	  _inherits(FileDropper, _React$Component);
 	
-	  function Loader(props) {
-	    _classCallCheck(this, Loader);
+	  function FileDropper(props) {
+	    _classCallCheck(this, FileDropper);
 	
-	    _get(Object.getPrototypeOf(Loader.prototype), 'constructor', this).call(this, props);
+	    _get(Object.getPrototypeOf(FileDropper.prototype), 'constructor', this).call(this, props);
 	    this.state = { onTop: false };
 	  }
 	
-	  _createClass(Loader, [{
+	  _createClass(FileDropper, [{
 	    key: 'onFileDrop',
 	    value: function onFileDrop(e) {
 	      e.stopPropagation();
@@ -28834,14 +28890,119 @@
 	    }
 	  }]);
 	
-	  return Loader;
+	  return FileDropper;
 	})(_react2['default'].Component);
 	
-	exports['default'] = Loader;
+	exports['default'] = FileDropper;
 	module.exports = exports['default'];
 
 /***/ },
 /* 349 */
+/*!*************************!*\
+  !*** ./datasetList.jsx ***!
+  \*************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _lodash = __webpack_require__(/*! lodash */ 2);
+	
+	var _lodash2 = _interopRequireDefault(_lodash);
+	
+	var _reactRouter = __webpack_require__(/*! react-router */ 3);
+	
+	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 67);
+	
+	var DatasetList = (function (_React$Component) {
+	    _inherits(DatasetList, _React$Component);
+	
+	    function DatasetList(props) {
+	        _classCallCheck(this, DatasetList);
+	
+	        _get(Object.getPrototypeOf(DatasetList.prototype), 'constructor', this).call(this, props);
+	    }
+	
+	    _createClass(DatasetList, [{
+	        key: 'render',
+	        value: function render() {
+	            var datasets = this.props.datasets;
+	            var onLaunchClick = this.props.onLaunchClick;
+	            var onEditClick = this.props.onEditClick;
+	            if (_lodash2['default'].isEmpty(datasets)) return _react2['default'].createElement('div', null);
+	            return _react2['default'].createElement(
+	                'div',
+	                null,
+	                _react2['default'].createElement(
+	                    'h3',
+	                    null,
+	                    'Available Datasets'
+	                ),
+	                _react2['default'].createElement(
+	                    _reactBootstrap.ListGroup,
+	                    null,
+	                    datasets.map(function (dataset) {
+	                        console.log(dataset);
+	                        return _react2['default'].createElement(
+	                            'li',
+	                            { className: 'list-group-item' },
+	                            _react2['default'].createElement(
+	                                _reactBootstrap.ButtonGroup,
+	                                null,
+	                                _react2['default'].createElement(
+	                                    _reactBootstrap.Button,
+	                                    { bsStyle: 'primary', onClick: function () {
+	                                            return onLaunchClick(dataset);
+	                                        } },
+	                                    ' Launch '
+	                                ),
+	                                _react2['default'].createElement(
+	                                    _reactBootstrap.Button,
+	                                    { onClick: function () {
+	                                            return onEditClick(dataset);
+	                                        } },
+	                                    ' Edit '
+	                                )
+	                            ),
+	                            _react2['default'].createElement(
+	                                'span',
+	                                { className: 'h4' },
+	                                ' ',
+	                                dataset,
+	                                ' '
+	                            )
+	                        );
+	                    })
+	                )
+	            );
+	        }
+	    }]);
+	
+	    return DatasetList;
+	})(_react2['default'].Component);
+	
+	exports['default'] = DatasetList;
+	module.exports = exports['default'];
+
+/***/ },
+/* 350 */
 /*!**********************!*\
   !*** ./launcher.jsx ***!
   \**********************/
@@ -28883,7 +29044,7 @@
 	
 	var _path2 = _interopRequireDefault(_path);
 	
-	var _testedListItem = __webpack_require__(/*! ./testedListItem */ 350);
+	var _testedListItem = __webpack_require__(/*! ./testedListItem */ 351);
 	
 	var _testedListItem2 = _interopRequireDefault(_testedListItem);
 	
@@ -29010,7 +29171,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 350 */
+/* 351 */
 /*!****************************!*\
   !*** ./testedListItem.jsx ***!
   \****************************/
@@ -29090,7 +29251,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 351 */
+/* 352 */
 /*!*************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/redux-thunk/lib/index.js ***!
   \*************************************************************************/
@@ -29115,7 +29276,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 352 */
+/* 353 */
 /*!*********************!*\
   !*** ./reducers.js ***!
   \*********************/
@@ -29223,12 +29384,115 @@
 	    }
 	}
 	
+	function snackbar(state, action) {
+	    if (state === undefined) state = {};
+	
+	    switch (action.type) {
+	        case _actions.LOAD_TABLE_FAILURE:
+	        case _actions.RENAME_COLUMNS_FAILURE:
+	        case _actions.CREATE_NEW_TABLE_FAILURE:
+	        case _actions.WRITE_TABLE_FAILURE:
+	        case _actions.CONFIG_INDYVA_FAILURE:
+	            return _lodash2['default'].assign({}, state, { msgStyle: "danger", msg: action.error.message, dismissed: false });
+	        case _actions.DISMISS_MSG:
+	            return _lodash2['default'].assign({}, state, { dismissed: true });
+	        default:
+	            return state;
+	    }
+	}
+	
 	var editorReducer = (0, _redux.combineReducers)({
 	    table: table,
+	    snackbar: snackbar,
 	    attributes: (0, _reduxUndo2['default'])(attributes, { filter: (0, _reduxUndo.excludeAction)(_actions.SET_ATTR_LABEL) }),
 	    cards: (0, _reduxUndo2['default'])(cards)
 	});
 	exports['default'] = editorReducer;
+	module.exports = exports['default'];
+
+/***/ },
+/* 354 */
+/*!**********************!*\
+  !*** ./snackbar.jsx ***!
+  \**********************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactRedux = __webpack_require__(/*! react-redux */ 299);
+	
+	var _lodash = __webpack_require__(/*! lodash */ 2);
+	
+	var _lodash2 = _interopRequireDefault(_lodash);
+	
+	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 67);
+	
+	var _actions = __webpack_require__(/*! ./actions */ 319);
+	
+	var Snackbar = (function (_React$Component) {
+	    _inherits(Snackbar, _React$Component);
+	
+	    function Snackbar(props) {
+	        _classCallCheck(this, Snackbar);
+	
+	        _get(Object.getPrototypeOf(Snackbar.prototype), 'constructor', this).call(this, props);
+	    }
+	
+	    _createClass(Snackbar, [{
+	        key: 'onDismiss',
+	        value: function onDismiss() {
+	            this.props.dispatch((0, _actions.dismissMsg)());
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _props = this.props;
+	            var msg = _props.msg;
+	            var msgStyle = _props.msgStyle;
+	            var dismissed = _props.dismissed;
+	
+	            var onDismiss = this.onDismiss.bind(this);
+	
+	            if (dismissed === true || dismissed === undefined) {
+	                return _react2['default'].createElement('div', null);
+	            } else {
+	                return _react2['default'].createElement(
+	                    'div',
+	                    { style: { position: "fixed", right: 50, top: 50 } },
+	                    _react2['default'].createElement(
+	                        _reactBootstrap.Alert,
+	                        { bsStyle: msgStyle, onDismiss: onDismiss },
+	                        msg
+	                    )
+	                );
+	            }
+	        }
+	    }]);
+	
+	    return Snackbar;
+	})(_react2['default'].Component);
+	
+	exports['default'] = (0, _reactRedux.connect)(function (state) {
+	    return state.snackbar;
+	})(Snackbar);
 	module.exports = exports['default'];
 
 /***/ }

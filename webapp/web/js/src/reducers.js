@@ -1,7 +1,8 @@
 import {combineReducers} from 'redux';
 import _ from "lodash";
 import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
-    TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS,
+    TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS, DISMISS_MSG,
+    LOAD_TABLE_REQUEST, LOAD_TABLE_FAILURE, LOAD_TABLE_SUCCESS,
     RENAME_COLUMNS_REQUEST, RENAME_COLUMNS_FAILURE, RENAME_COLUMNS_SUCCESS,
     CREATE_NEW_TABLE_REQUEST, CREATE_NEW_TABLE_FAILURE, CREATE_NEW_TABLE_SUCCESS,
     WRITE_TABLE_REQUEST, WRITE_TABLE_FAILURE, WRITE_TABLE_SUCCESS,
@@ -80,8 +81,25 @@ function table(state={}, action) {
     }
 }
 
+function snackbar(state={}, action) {
+    switch (action.type) {
+        case LOAD_TABLE_FAILURE:
+        case RENAME_COLUMNS_FAILURE:
+        case CREATE_NEW_TABLE_FAILURE:
+        case WRITE_TABLE_FAILURE:
+        case CONFIG_INDYVA_FAILURE:
+            return _.assign({}, state, {msgStyle: "danger", msg: action.error.message, dismissed: false});
+        case DISMISS_MSG:
+            return _.assign({}, state, {dismissed: true});
+        default:
+            return state;
+    }
+}
+
+
 const editorReducer = combineReducers({
     table: table,
+    snackbar:snackbar,
     attributes: undoable(attributes, {filter: excludeAction(SET_ATTR_LABEL)}),
     cards: undoable(cards)
 });

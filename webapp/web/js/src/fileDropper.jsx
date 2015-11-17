@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react'
 import {Link} from 'react-router';
 import _ from 'lodash';
 
-export default class Loader extends React.Component {
+export default class FileDropper extends React.Component {
   constructor(props) {
     super(props);
     this.state = {onTop: false};
