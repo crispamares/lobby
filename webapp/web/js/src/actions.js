@@ -89,12 +89,12 @@ export function createNewTable(name, sourceTable, schema) {
 }
 
 
-export function loadTable(tableName, filePath) {
+export function loadTable(tableName, filePath, schemaPath=null) {
     const rpc = Context.instance().rpc;
     return (dispatch) => {
         dispatch({type: LOAD_TABLE_REQUEST});
 
-        return rpc.call("IOSrv.read_csv", [tableName, filePath]).then(
+        return rpc.call("IOSrv.read_csv", [tableName, filePath, schemaPath]).then(
             table => { return rpc.call("TableSrv.schema", [table]) })
         .then( schema => {
             dispatch({type: LOAD_TABLE_SUCCESS, filePath})

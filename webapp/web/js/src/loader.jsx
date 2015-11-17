@@ -44,7 +44,7 @@ class Loader extends React.Component {
         let destination = path.join(config.destinationPath, path.basename(filePath));
 
         try {
-            if (fs.lstatSync(destination).isFile) fs.unlinkSync(destination);
+            if (fs.lstatSync(destination).isFile) {fs.unlinkSync(destination)};
         }
         catch(e) {}
         fs.symlinkSync( filePath, destination);
@@ -54,13 +54,15 @@ class Loader extends React.Component {
             fs.unlinkSync(destination);
             if (this.props.table.loadingTableState === "error") return;
             history.pushState(history.state, "/editor");
-        } );
+        });
     }
     readTableFromDestination (dataset) {
-        let {dispatch, history} = this.props;
-        let destination = path.join(config.destinationPath, dataset + ".csv");
+        const {dispatch, history} = this.props;
+        const filePath = path.join(config.destinationPath, dataset + ".csv");
+        let schemaPath = filePath.replace(".csv", "_schema.json");
+        schemaPath = (fs.lstatSync(schemaPath).isFile) ? schemaPath : null;
 
-        dispatch(loadTable("mainTable", destination))
+        dispatch(loadTable("mainTable", filePath, schemaPath))
         .then(() => {
             if (this.props.table.loadingTableState === "error") return;
             history.pushState(history.state, "/editor");
