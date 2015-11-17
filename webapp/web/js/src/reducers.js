@@ -56,7 +56,8 @@ function table(state={}, action) {
         case LOAD_TABLE_FAILURE:
             return _.assign({}, state, {loadingTableState: "error"});
         case LOAD_TABLE_SUCCESS:
-            return _.assign({}, state, {loadingTableState: "success"});
+            const fileName = path.parse(action.filePath).name;
+            return _.assign({}, state, {loadingTableState: "success", fileName});
         case RENAME_COLUMNS_REQUEST:
             return _.assign({}, state, {renamingState: "waiting"});
         case RENAME_COLUMNS_FAILURE:

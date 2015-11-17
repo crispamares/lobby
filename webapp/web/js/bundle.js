@@ -22192,7 +22192,7 @@
 	        return rpc.call("IOSrv.read_csv", [tableName, filePath]).then(function (table) {
 	            return rpc.call("TableSrv.schema", [table]);
 	        }).then(function (schema) {
-	            dispatch({ type: LOAD_TABLE_SUCCESS });
+	            dispatch({ type: LOAD_TABLE_SUCCESS, filePath: filePath });
 	            dispatch(fillFromSchema(schema));
 	            dispatch(initCards(schema.attributes));
 	        }).otherwise(function (error) {
@@ -28775,6 +28775,7 @@
 	var fs = _remote2['default'].require('fs');
 	
 	var config = _remote2['default'].getGlobal('configuration');
+	window.path = _path2['default'];
 	
 	var Loader = (function (_React$Component) {
 	    _inherits(Loader, _React$Component);
@@ -28829,6 +28830,7 @@
 	            fs.symlinkSync(filePath, destination);
 	
 	            dispatch((0, _actions.loadTable)("mainTable", destination)).then(function () {
+	                fs.unlinkSync(destination);
 	                if (_this.props.table.loadingTableState === "error") return;
 	                history.pushState(history.state, "/editor");
 	            });
@@ -29198,13 +29200,13 @@
 	    }, {
 	        key: '_writeFinalTable',
 	        value: function _writeFinalTable(props) {
-	            var filePath = _path2['default'].join(config.destinationPath, config.indyvaTableName + '.csv');
+	            var filePath = _path2['default'].join(config.destinationPath, props.table.fileName + '.csv');
 	            return props.dispatch((0, _actions.writeTable)(config.indyvaTableName, filePath));
 	        }
 	    }, {
 	        key: '_configIndyva',
 	        value: function _configIndyva(props) {
-	            return props.dispatch((0, _actions.configIndyva)(config.indyvaTableName));
+	            return props.dispatch((0, _actions.configIndyva)(props.table.fileName));
 	        }
 	    }, {
 	        key: 'render',
@@ -29453,7 +29455,8 @@
 	        case _actions.LOAD_TABLE_FAILURE:
 	            return _lodash2['default'].assign({}, state, { loadingTableState: "error" });
 	        case _actions.LOAD_TABLE_SUCCESS:
-	            return _lodash2['default'].assign({}, state, { loadingTableState: "success" });
+	            var fileName = path.parse(action.filePath).name;
+	            return _lodash2['default'].assign({}, state, { loadingTableState: "success", fileName: fileName });
 	        case _actions.RENAME_COLUMNS_REQUEST:
 	            return _lodash2['default'].assign({}, state, { renamingState: "waiting" });
 	        case _actions.RENAME_COLUMNS_FAILURE:

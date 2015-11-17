@@ -13,6 +13,7 @@ import DatasetList from './datasetList';
 import {loadTable, configIndyva} from './actions';
 
 const config = remote.getGlobal('configuration');
+window.path = path;
 
 class Loader extends React.Component {
     constructor(props) {
@@ -50,6 +51,7 @@ class Loader extends React.Component {
 
         dispatch(loadTable("mainTable", destination))
         .then(() => {
+            fs.unlinkSync(destination);
             if (this.props.table.loadingTableState === "error") return;
             history.pushState(history.state, "/editor");
         } );

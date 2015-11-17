@@ -97,7 +97,7 @@ export function loadTable(tableName, filePath) {
         return rpc.call("IOSrv.read_csv", [tableName, filePath]).then(
             table => { return rpc.call("TableSrv.schema", [table]) })
         .then( schema => {
-            dispatch({type: LOAD_TABLE_SUCCESS})
+            dispatch({type: LOAD_TABLE_SUCCESS, filePath})
             dispatch(fillFromSchema(schema));
             dispatch(initCards(schema.attributes));
         })

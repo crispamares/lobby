@@ -42,11 +42,11 @@ class Launcher extends React.Component {
         return props.dispatch(createNewTable(config.indyvaTableName, sourceTable, schema));
     }
     _writeFinalTable(props) {
-        let filePath = path.join(config.destinationPath, config.indyvaTableName + '.csv');
+        let filePath = path.join(config.destinationPath, props.table.fileName + '.csv');
         return props.dispatch(writeTable(config.indyvaTableName, filePath));
     }
     _configIndyva(props) {
-        return props.dispatch(configIndyva(config.indyvaTableName));
+        return props.dispatch(configIndyva(props.table.fileName));
     }
     render () {
         let renamingState = this.props.table.renamingState;
