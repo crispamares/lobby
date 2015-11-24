@@ -25096,7 +25096,7 @@
 	  *
 	  * @param method     The method to run on JSON-RPC server.
 	  * @param params     The params; an array or object.
-	  * @return		 A when.promise 
+	  * @return		 A when.promise
 	  */
 		WsRpc.prototype.call = function call(method, params) {
 			// Construct the JSON-RPC 2.0 request.
@@ -25125,7 +25125,7 @@
 	  * modify the request before sending it. The 'extenders' need to
 	  * have a method named `modifyRequest` which accepts one param,
 	  * the JSON-RPC request object.
-	  * 
+	  *
 	  * @fn extend
 	  * @memberof WsRpc
 	  *
@@ -25139,7 +25139,7 @@
 	  * Internal method that sends a message through the Web Socket
 	  * only if the connection is ready, otherwise the message is
 	  * queued until the _flush method is called.
-	  * 
+	  *
 	  * @fn _send
 	  * @memberof WsRpc
 	  *
@@ -25199,7 +25199,7 @@
 					return;
 				}
 			} catch (err) {
-				// Probably an error while parsing a non json-string as json. 
+				// Probably an error while parsing a non json-string as json.
 				// All real JSON-RPC cases are
 				// handled above, and the fallback method is called below.
 				console.log('*** Error no handled', err, this);
@@ -29502,7 +29502,9 @@
 	        case _actions.CREATE_NEW_TABLE_FAILURE:
 	        case _actions.WRITE_TABLE_FAILURE:
 	        case _actions.CONFIG_INDYVA_FAILURE:
-	            return _lodash2['default'].assign({}, state, { msgStyle: "danger", msg: action.error.message, dismissed: false });
+	            var msg = action.error.message;
+	            msg = msg.substr(2, msg.length - 6);
+	            return _lodash2['default'].assign({}, state, { msgStyle: "danger", msg: msg, dismissed: false });
 	        case _actions.DISMISS_MSG:
 	            return _lodash2['default'].assign({}, state, { dismissed: true });
 	        default:

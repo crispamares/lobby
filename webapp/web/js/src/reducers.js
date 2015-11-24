@@ -95,7 +95,9 @@ function snackbar(state={}, action) {
         case CREATE_NEW_TABLE_FAILURE:
         case WRITE_TABLE_FAILURE:
         case CONFIG_INDYVA_FAILURE:
-            return _.assign({}, state, {msgStyle: "danger", msg: action.error.message, dismissed: false});
+            let msg = action.error.message
+            msg = msg.substr(2, msg.length - 6)
+            return _.assign({}, state, {msgStyle: "danger", msg, dismissed: false});
         case DISMISS_MSG:
             return _.assign({}, state, {dismissed: true});
         default:
