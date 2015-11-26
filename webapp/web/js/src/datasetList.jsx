@@ -18,10 +18,10 @@ export default class DatasetList extends React.Component {
           <div>
               <h3>Available Datasets</h3>
               <ListGroup>
-                  {datasets.map( (dataset) => {
+                  {datasets.map( (dataset, i) => {
                       console.log(dataset);
                       return (
-                          <li className="list-group-item">
+                          <li key={"k"+i} className="list-group-item">
                               <ButtonGroup>
                                   <Button bsStyle="primary" bsSixe="small" onClick={() => onLaunchClick(dataset)}> Launch </Button>
                                   <Button bsSixe="small" onClick={() => onEditClick(dataset)}> Edit </Button>

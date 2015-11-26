@@ -22058,10 +22058,12 @@
 	exports.initCards = initCards;
 	exports.setAttrLabel = setAttrLabel;
 	exports.setAttrType = setAttrType;
+	exports.setAttrOrder = setAttrOrder;
 	exports.fillFromSchema = fillFromSchema;
 	exports.dismissMsg = dismissMsg;
 	exports.renameColumns = renameColumns;
 	exports.createNewTable = createNewTable;
+	exports.fetchDistinctValues = fetchDistinctValues;
 	exports.loadTable = loadTable;
 	exports.writeTable = writeTable;
 	exports.configIndyva = configIndyva;
@@ -22078,6 +22080,8 @@
 	exports.SET_ATTR_LABEL = SET_ATTR_LABEL;
 	var SET_ATTR_TYPE = 'SET_ATTR_TYPE';
 	exports.SET_ATTR_TYPE = SET_ATTR_TYPE;
+	var SET_ATTR_ORDER = 'SET_ATTR_ORDER';
+	exports.SET_ATTR_ORDER = SET_ATTR_ORDER;
 	var FILL_FROM_SCHEMA = 'FILL_FROM_SCHEMA';
 	exports.FILL_FROM_SCHEMA = FILL_FROM_SCHEMA;
 	var TOGGLE_CARD_EXPANSION = 'TOGGLE_CARD_EXPANSION';
@@ -22124,6 +22128,13 @@
 	var CONFIG_INDYVA_SUCCESS = 'CONFIG_INDYVA_SUCCESS';
 	
 	exports.CONFIG_INDYVA_SUCCESS = CONFIG_INDYVA_SUCCESS;
+	var FETCH_DISTINCT_VALUES_REQUEST = 'FETCH_DISTINCT_VALUES_REQUEST';
+	exports.FETCH_DISTINCT_VALUES_REQUEST = FETCH_DISTINCT_VALUES_REQUEST;
+	var FETCH_DISTINCT_VALUES_FAILURE = 'FETCH_DISTINCT_VALUES_FAILURE';
+	exports.FETCH_DISTINCT_VALUES_FAILURE = FETCH_DISTINCT_VALUES_FAILURE;
+	var FETCH_DISTINCT_VALUES_SUCCESS = 'FETCH_DISTINCT_VALUES_SUCCESS';
+	
+	exports.FETCH_DISTINCT_VALUES_SUCCESS = FETCH_DISTINCT_VALUES_SUCCESS;
 	
 	function setOrder(order) {
 	    return { type: SET_ORDER, order: order };
@@ -22147,6 +22158,10 @@
 	
 	function setAttrType(attr, type) {
 	    return { type: SET_ATTR_TYPE, attr: attr, attrType: type };
+	}
+	
+	function setAttrOrder(attr, order) {
+	    return { type: SET_ATTR_ORDER, attr: attr, order: order };
 	}
 	
 	function fillFromSchema(schema) {
@@ -22187,6 +22202,19 @@
 	            return dispatch({ type: CREATE_NEW_TABLE_SUCCESS });
 	        }).otherwise(function (error) {
 	            return dispatch({ type: CREATE_NEW_TABLE_FAILURE, error: error });
+	        });
+	    };
+	}
+	
+	function fetchDistinctValues(tableName, attr) {
+	    var rpc = _context2['default'].instance().rpc;
+	    return function (dispatch) {
+	        dispatch({ type: FETCH_DISTINCT_VALUES_REQUEST });
+	
+	        return rpc.call("TableSrv.distinct", [tableName, attr]).then(function (data) {
+	            return dispatch({ type: FETCH_DISTINCT_VALUES_SUCCESS, values: data });
+	        }).otherwise(function (error) {
+	            return dispatch({ type: FETCH_DISTINCT_VALUES_FAILURE, error: error });
 	        });
 	    };
 	}
@@ -25401,8 +25429,22 @@
 	            return { y: l.y, attr: l.attr };
 	        }).sortBy('y').pluck('attr').value();
 	    },
-	    render: function render() {
+	    onAttrTypeChanged: function onAttrTypeChanged(attrName, attrType) {
 	        var _this = this;
+	
+	        var tableName = this.props.table.tableName;
+	        this.props.dispatch((0, _actions.setAttrType)(attrName, attrType));
+	        if (attrType === "ORDINAL") {
+	            this.props.dispatch((0, _actions.fetchDistinctValues)(tableName, attrName)).then(function (action) {
+	                return _this.props.dispatch((0, _actions.setAttrOrder)(attrName, action.values));
+	            });
+	        } else {
+	            // Only ORDINAL attributes have order
+	            this.props.dispatch((0, _actions.setAttrOrder)(attrName, null));
+	        }
+	    },
+	    render: function render() {
+	        var _this2 = this;
 	
 	        var rowHeight = 45;
 	        var expandedRows = 5;
@@ -25434,7 +25476,7 @@
 	                },
 	                startAnalysisEnabled: true,
 	                onStartAnalysisClick: function () {
-	                    _this.props.history.pushState(_this.props.history.state, "/launch");
+	                    _this2.props.history.pushState(_this2.props.history.state, "/launch");
 	                }
 	            }),
 	            _react2['default'].createElement(
@@ -25446,14 +25488,14 @@
 	                    useCSSTransforms: true,
 	                    isResizable: false,
 	                    onLayoutChange: function (newLayout) {
-	                        var newOrder = _this.orderFromLayout(newLayout);
+	                        var newOrder = _this2.orderFromLayout(newLayout);
 	                        if (!_lodash2['default'].isEqual(order, newOrder)) {
 	                            // Avoids infinite recursion
 	                            dispatch((0, _actions.setOrder)(newOrder));
 	                        }
 	                    },
 	                    onResizeStop: function (layout) {
-	                        return dispatch((0, _actions.setOrder)(_this.orderFromLayout(layout)));
+	                        return dispatch((0, _actions.setOrder)(_this2.orderFromLayout(layout)));
 	                    }
 	                },
 	                order.map(function (attrName, i) {
@@ -25473,7 +25515,7 @@
 	                                return dispatch((0, _actions.setAttrLabel)(attrName, ev.target.value));
 	                            },
 	                            onAttrTypeChanged: function (ev) {
-	                                return dispatch((0, _actions.setAttrType)(attrName, ev.target.value));
+	                                return _this2.onAttrTypeChanged(attrName, ev.target.value);
 	                            },
 	                            onHeaderClick: function () {
 	                                return dispatch((0, _actions.toggleCardExpansion)(attrName));
@@ -28548,6 +28590,10 @@
 	
 	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 66);
 	
+	var _orderedFlowList = __webpack_require__(/*! ./orderedFlowList */ 355);
+	
+	var _orderedFlowList2 = _interopRequireDefault(_orderedFlowList);
+	
 	var Card = _react2['default'].createClass({
 	    displayName: 'Card',
 	
@@ -28572,7 +28618,7 @@
 	        var _this = this;
 	
 	        var props = this.props;
-	
+	        var attrOrder = _lodash2['default'].isArray(this.props.attrOrder) ? this.props.attrOrder : [];
 	        var cardClasses = _react2['default'].addons.classSet({
 	            'card': true,
 	            'expanded': this.props.expanded
@@ -28581,6 +28627,7 @@
 	            'card-content': true,
 	            'hidden': !this.props.expanded
 	        });
+	
 	        return _react2['default'].createElement(
 	            'div',
 	            { className: cardClasses },
@@ -28637,7 +28684,8 @@
 	                            'Ordinal'
 	                        )
 	                    )
-	                )
+	                ),
+	                _react2['default'].createElement(_orderedFlowList2['default'], { values: attrOrder })
 	            )
 	        );
 	    }
@@ -29072,11 +29120,11 @@
 	                _react2['default'].createElement(
 	                    _reactBootstrap.ListGroup,
 	                    null,
-	                    datasets.map(function (dataset) {
+	                    datasets.map(function (dataset, i) {
 	                        console.log(dataset);
 	                        return _react2['default'].createElement(
 	                            'li',
-	                            { className: 'list-group-item' },
+	                            { key: "k" + i, className: 'list-group-item' },
 	                            _react2['default'].createElement(
 	                                _reactBootstrap.ButtonGroup,
 	                                null,
@@ -29436,6 +29484,8 @@
 	            return _lodash2['default'].merge({}, state, { attrsByName: _defineProperty({}, action.attr, { label: action.label }) });
 	        case _actions.SET_ATTR_TYPE:
 	            return _lodash2['default'].merge({}, state, { attrsByName: _defineProperty({}, action.attr, { attribute_type: action.attrType }) });
+	        case _actions.SET_ATTR_ORDER:
+	            return _lodash2['default'].merge({}, state, { attrsByName: _defineProperty({}, action.attr, { meta: { order: action.order } }) });
 	        case _actions.SET_ORDER:
 	            return _lodash2['default'].assign({}, state, { order: [].concat(_toConsumableArray(action.order)) });
 	        case _actions.FILL_FROM_SCHEMA:
@@ -29520,6 +29570,7 @@
 	        case _actions.CREATE_NEW_TABLE_FAILURE:
 	        case _actions.WRITE_TABLE_FAILURE:
 	        case _actions.CONFIG_INDYVA_FAILURE:
+	        case _actions.FETCH_DISTINCT_VALUES_FAILURE:
 	            var msg = action.error.message;
 	            msg = msg.substr(2, msg.length - 6);
 	            return _lodash2['default'].assign({}, state, { msgStyle: "danger", msg: msg, dismissed: false });
@@ -29538,6 +29589,67 @@
 	});
 	exports['default'] = editorReducer;
 	module.exports = exports['default'];
+
+/***/ },
+/* 355 */
+/*!*****************************!*\
+  !*** ./orderedFlowList.jsx ***!
+  \*****************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var OrderedFlowList = (function (_React$Component) {
+	    _inherits(OrderedFlowList, _React$Component);
+	
+	    function OrderedFlowList() {
+	        _classCallCheck(this, OrderedFlowList);
+	
+	        _get(Object.getPrototypeOf(OrderedFlowList.prototype), "constructor", this).apply(this, arguments);
+	    }
+	
+	    _createClass(OrderedFlowList, [{
+	        key: "render",
+	        value: function render() {
+	            var values = this.props.values;
+	            console.log("--->", values);
+	            return _react2["default"].createElement(
+	                "div",
+	                null,
+	                values.map(function (value, i) {
+	                    return _react2["default"].createElement(
+	                        "span",
+	                        null,
+	                        i + 1 + ". " + value
+	                    );
+	                })
+	            );
+	        }
+	    }]);
+	
+	    return OrderedFlowList;
+	})(_react2["default"].Component);
+	
+	exports["default"] = OrderedFlowList;
+	module.exports = exports["default"];
 
 /***/ }
 /******/ ]);

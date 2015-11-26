@@ -1,6 +1,6 @@
 import {combineReducers} from 'redux';
 import _ from "lodash";
-import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
+import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE, SET_ATTR_ORDER,
     TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS, DISMISS_MSG,
     SET_CARD_HEIGHT,
     LOAD_TABLE_REQUEST, LOAD_TABLE_FAILURE, LOAD_TABLE_SUCCESS,
@@ -8,6 +8,7 @@ import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
     CREATE_NEW_TABLE_REQUEST, CREATE_NEW_TABLE_FAILURE, CREATE_NEW_TABLE_SUCCESS,
     WRITE_TABLE_REQUEST, WRITE_TABLE_FAILURE, WRITE_TABLE_SUCCESS,
     CONFIG_INDYVA_REQUEST, CONFIG_INDYVA_FAILURE, CONFIG_INDYVA_SUCCESS,
+    FETCH_DISTINCT_VALUES_REQUEST, FETCH_DISTINCT_VALUES_FAILURE, FETCH_DISTINCT_VALUES_SUCCESS,
 }
     from './actions';
 import undoable, {excludeAction} from 'redux-undo';
@@ -26,6 +27,8 @@ function attributes(state = {}, action) {
             return _.merge({}, state, {attrsByName: {[action.attr] : {label: action.label}}});
         case SET_ATTR_TYPE:
             return _.merge({}, state, {attrsByName: {[action.attr] : {attribute_type: action.attrType}}});
+        case SET_ATTR_ORDER:
+            return _.merge({}, state, {attrsByName: {[action.attr] : {meta: {order: action.order}}}});
         case SET_ORDER:
             return _.assign({}, state, {order: [...action.order]});
         case FILL_FROM_SCHEMA:
@@ -102,6 +105,7 @@ function snackbar(state={}, action) {
         case CREATE_NEW_TABLE_FAILURE:
         case WRITE_TABLE_FAILURE:
         case CONFIG_INDYVA_FAILURE:
+        case FETCH_DISTINCT_VALUES_FAILURE:
             let msg = action.error.message
             msg = msg.substr(2, msg.length - 6)
             return _.assign({}, state, {msgStyle: "danger", msg, dismissed: false});

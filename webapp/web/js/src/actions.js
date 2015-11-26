@@ -3,6 +3,7 @@ import Context from 'context';
 export const SET_ORDER = 'SET_ORDER';
 export const SET_ATTR_LABEL = 'SET_ATTR_LABEL';
 export const SET_ATTR_TYPE = 'SET_ATTR_TYPE';
+export const SET_ATTR_ORDER = 'SET_ATTR_ORDER';
 export const FILL_FROM_SCHEMA = 'FILL_FROM_SCHEMA';
 export const TOGGLE_CARD_EXPANSION = 'TOGGLE_CARD_EXPANSION';
 export const SET_CARD_HEIGHT = 'SET_CARD_HEIGHT';
@@ -29,6 +30,10 @@ export const CONFIG_INDYVA_REQUEST = 'CONFIG_INDYVA_REQUEST';
 export const CONFIG_INDYVA_FAILURE = 'CONFIG_INDYVA_FAILURE';
 export const CONFIG_INDYVA_SUCCESS = 'CONFIG_INDYVA_SUCCESS';
 
+export const FETCH_DISTINCT_VALUES_REQUEST = 'FETCH_DISTINCT_VALUES_REQUEST';
+export const FETCH_DISTINCT_VALUES_FAILURE = 'FETCH_DISTINCT_VALUES_FAILURE';
+export const FETCH_DISTINCT_VALUES_SUCCESS = 'FETCH_DISTINCT_VALUES_SUCCESS';
+
 export function setOrder(order) {
     return {type: SET_ORDER, order};
 }
@@ -51,6 +56,10 @@ export function setAttrLabel(attr, label) {
 
 export function setAttrType(attr, type) {
     return {type: SET_ATTR_TYPE, attr, attrType: type};
+}
+
+export function setAttrOrder(attr, order) {
+    return {type: SET_ATTR_ORDER, attr, order};
 }
 
 export function fillFromSchema(schema) {
@@ -93,6 +102,16 @@ export function createNewTable(name, sourceTable, schema) {
     }
 }
 
+export function fetchDistinctValues(tableName, attr) {
+    const rpc = Context.instance().rpc;
+    return (dispatch) => {
+        dispatch({type: FETCH_DISTINCT_VALUES_REQUEST})
+
+        return rpc.call("TableSrv.distinct", [tableName, attr])
+        .then((data) => dispatch({type: FETCH_DISTINCT_VALUES_SUCCESS, values: data}))
+        .otherwise((error) => dispatch({type: FETCH_DISTINCT_VALUES_FAILURE, error}));
+    }
+}
 
 export function loadTable(tableName, filePath, schemaPath=null) {
     const rpc = Context.instance().rpc;

@@ -6,7 +6,8 @@ import {Button} from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { ActionCreators } from 'redux-undo';
 
-import {setOrder, toggleCardExpansion, setAttrLabel, setAttrType} from './actions';
+import {setOrder, toggleCardExpansion, setAttrLabel, setAttrType, setAttrOrder,
+    fetchDistinctValues} from './actions';
 import Card from './card';
 import ToolBar from './toolbar';
 
@@ -28,6 +29,16 @@ const Editor = React.createClass({
         .sortBy('y')
         .pluck('attr')
         .value();
+    },
+    onAttrTypeChanged(attrName, attrType) {
+        const tableName = this.props.table.tableName;
+        this.props.dispatch(setAttrType(attrName, attrType));
+        if (attrType === "ORDINAL") {
+            this.props.dispatch(fetchDistinctValues(tableName, attrName))
+            .then((action) => this.props.dispatch(setAttrOrder(attrName, action.values)));
+        } else { // Only ORDINAL attributes have order
+            this.props.dispatch(setAttrOrder(attrName, null));
+        }
     },
     render() {
         const rowHeight = 45;
@@ -87,7 +98,7 @@ const Editor = React.createClass({
                                         order={i + 1}
                                         expanded={cards[attrName].expanded}
                                         onAttrLabelChanged={(ev) => dispatch(setAttrLabel(attrName, ev.target.value))}
-                                        onAttrTypeChanged={(ev) => dispatch(setAttrType(attrName, ev.target.value))}
+                                        onAttrTypeChanged={(ev) => this.onAttrTypeChanged(attrName, ev.target.value)}
                                         onHeaderClick={() => dispatch(toggleCardExpansion(attrName)) }/>
                                 </div>
                             );

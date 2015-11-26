@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import {Button, ButtonToolbar, Input} from 'react-bootstrap';
+import OrderedFlowList from './orderedFlowList';
 
 const Card = React.createClass({
     PropTypes : {
@@ -17,16 +18,17 @@ const Card = React.createClass({
         return  ! _.isEqual(nextProps, this.props, (x,y) => { if (_.isFunction(x)) {return true} });
     },
     render () {
-        let props = this.props;
-
-        let cardClasses =  React.addons.classSet({
+        const props = this.props;
+        const attrOrder = (_.isArray(this.props.attrOrder)) ? this.props.attrOrder : [];
+        const cardClasses =  React.addons.classSet({
             'card': true,
             'expanded': this.props.expanded,
         });
-        let contentClasses =  React.addons.classSet({
+        const contentClasses =  React.addons.classSet({
             'card-content': true,
             'hidden': ! this.props.expanded,
         });
+
         return (
             <div className={cardClasses}>
                 <div className="btn btn-xs btn-default card-anchor card-move">
@@ -51,6 +53,7 @@ const Card = React.createClass({
                         </Input>
                     </form>
 
+                    <OrderedFlowList values={attrOrder}></OrderedFlowList>
                 </div>
             </div>
         )
