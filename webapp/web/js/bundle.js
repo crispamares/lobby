@@ -22054,6 +22054,7 @@
 	});
 	exports.setOrder = setOrder;
 	exports.toggleCardExpansion = toggleCardExpansion;
+	exports.setCardHeight = setCardHeight;
 	exports.initCards = initCards;
 	exports.setAttrLabel = setAttrLabel;
 	exports.setAttrType = setAttrType;
@@ -22073,14 +22074,16 @@
 	
 	var SET_ORDER = 'SET_ORDER';
 	exports.SET_ORDER = SET_ORDER;
-	var TOGGLE_CARD_EXPANSION = 'TOGGLE_CARD_EXPANSION';
-	exports.TOGGLE_CARD_EXPANSION = TOGGLE_CARD_EXPANSION;
 	var SET_ATTR_LABEL = 'SET_ATTR_LABEL';
 	exports.SET_ATTR_LABEL = SET_ATTR_LABEL;
 	var SET_ATTR_TYPE = 'SET_ATTR_TYPE';
 	exports.SET_ATTR_TYPE = SET_ATTR_TYPE;
 	var FILL_FROM_SCHEMA = 'FILL_FROM_SCHEMA';
 	exports.FILL_FROM_SCHEMA = FILL_FROM_SCHEMA;
+	var TOGGLE_CARD_EXPANSION = 'TOGGLE_CARD_EXPANSION';
+	exports.TOGGLE_CARD_EXPANSION = TOGGLE_CARD_EXPANSION;
+	var SET_CARD_HEIGHT = 'SET_CARD_HEIGHT';
+	exports.SET_CARD_HEIGHT = SET_CARD_HEIGHT;
 	var INIT_CARDS = 'INIT_CARDS';
 	exports.INIT_CARDS = INIT_CARDS;
 	var DISMISS_MSG = 'DISMISS_MSG';
@@ -22128,6 +22131,10 @@
 	
 	function toggleCardExpansion(cardKey) {
 	    return { type: TOGGLE_CARD_EXPANSION, cardKey: cardKey };
+	}
+	
+	function setCardHeight(cardKey, height) {
+	    return { type: SET_CARD_HEIGHT, cardKey: cardKey, height: height };
 	}
 	
 	function initCards(attributes) {
@@ -25374,10 +25381,10 @@
 	
 	var hashCode = function hashCode(str) {
 	    var hash = 0,
-	        i,
-	        chr,
-	        len;
-	    if (str.length == 0) return hash;
+	        i = undefined,
+	        chr = undefined,
+	        len = undefined;
+	    if (str.length === 0) return hash;
 	    for (i = 0, len = str.length; i < len; i++) {
 	        chr = str.charCodeAt(i);
 	        hash = (hash << 5) - hash + chr;
@@ -25407,8 +25414,10 @@
 	        // Compute the layout from state.order and state.expanded
 	        var _lastY = 0;
 	        var layout = _lodash2['default'].map(order, function (attrName, i) {
-	            var height = cards[attrName].expanded ? expandedRows : 1;
-	            _lastY += cards[attrName].expanded ? expandedRows : 1;
+	            // let height = (cards[attrName].expanded)? cards[attrName].height * expandedRows : 1;
+	            // _lastY += height;
+	            var height = cards[attrName].expanded ? cards[attrName].height * expandedRows : 1;
+	            _lastY += height;
 	            var result = { x: 0, y: _lastY, w: 1, h: height, i: "c" + hashCode(attrName), attr: attrName, handle: ".card-anchor" };
 	            return result;
 	        });
@@ -25450,12 +25459,14 @@
 	                order.map(function (attrName, i) {
 	                    var attrType = attributes[attrName]["attribute_type"];
 	                    var attrLabel = attributes[attrName]["label"];
+	                    var attrOrder = attributes[attrName].meta.order;
 	                    return _react2['default'].createElement(
 	                        'div',
 	                        { key: "c" + hashCode(attrName) },
 	                        _react2['default'].createElement(_card2['default'], {
 	                            attrLabel: attrLabel,
 	                            attrType: attrType,
+	                            attrOrder: attrOrder,
 	                            order: i + 1,
 	                            expanded: cards[attrName].expanded,
 	                            onAttrLabelChanged: function (ev) {
@@ -28522,7 +28533,7 @@
 	'use strict';
 	
 	Object.defineProperty(exports, '__esModule', {
-	  value: true
+	    value: true
 	});
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -28538,97 +28549,98 @@
 	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 66);
 	
 	var Card = _react2['default'].createClass({
-	  displayName: 'Card',
+	    displayName: 'Card',
 	
-	  PropTypes: {
-	    onHeaderClick: _react.PropTypes.func.isRequired,
-	    onAttrLabelChanged: _react.PropTypes.func.isRequired,
-	    onAttrTypeChanged: _react.PropTypes.func.isRequired,
-	    attrLabel: _react.PropTypes.string.isRequired,
-	    attrType: _react.PropTypes.string.isRequired,
-	    order: _react.PropTypes.number.isRequired,
-	    expanded: _react.PropTypes.bool.isRequired
-	  },
-	  shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
-	    return !_lodash2['default'].isEqual(nextProps, this.props, function (x, y) {
-	      if (_lodash2['default'].isFunction(x)) {
-	        return true;
-	      }
-	    });
-	  },
-	  render: function render() {
-	    var _this = this;
+	    PropTypes: {
+	        onHeaderClick: _react.PropTypes.func.isRequired,
+	        onAttrLabelChanged: _react.PropTypes.func.isRequired,
+	        onAttrTypeChanged: _react.PropTypes.func.isRequired,
+	        attrLabel: _react.PropTypes.string.isRequired,
+	        attrType: _react.PropTypes.string.isRequired,
+	        attrOrder: _react.PropTypes.array,
+	        order: _react.PropTypes.number.isRequired,
+	        expanded: _react.PropTypes.bool.isRequired
+	    },
+	    shouldComponentUpdate: function shouldComponentUpdate(nextProps, nextState) {
+	        return !_lodash2['default'].isEqual(nextProps, this.props, function (x, y) {
+	            if (_lodash2['default'].isFunction(x)) {
+	                return true;
+	            }
+	        });
+	    },
+	    render: function render() {
+	        var _this = this;
 	
-	    var props = this.props;
+	        var props = this.props;
 	
-	    var cardClasses = _react2['default'].addons.classSet({
-	      'card': true,
-	      'expanded': this.props.expanded
-	    });
-	    var contentClasses = _react2['default'].addons.classSet({
-	      'card-content': true,
-	      'hidden': !this.props.expanded
-	    });
-	    return _react2['default'].createElement(
-	      'div',
-	      { className: cardClasses },
-	      _react2['default'].createElement(
-	        'div',
-	        { className: 'btn btn-xs btn-default card-anchor card-move' },
-	        _react2['default'].createElement('span', { className: 'icon glyphicon glyphicon-move' })
-	      ),
-	      _react2['default'].createElement(
-	        'div',
-	        { className: 'card-header', onClick: function (ev) {
-	            _this.props.onHeaderClick(ev);
-	          } },
-	        _react2['default'].createElement(
-	          'span',
-	          { className: 'card-title' },
-	          props.order + ".- " + props.attrLabel
-	        ),
-	        _react2['default'].createElement(
-	          'span',
-	          { className: 'pull-right text-muted' },
-	          ' ',
-	          _lodash2['default'].startCase(props.attrType.toLowerCase()),
-	          '  '
-	        )
-	      ),
-	      _react2['default'].createElement(
-	        'div',
-	        { className: contentClasses },
-	        _react2['default'].createElement(
-	          'form',
-	          { className: 'form-horizontal', onSubmit: function (ev) {
-	              ev.preventDefault();
-	            } },
-	          _react2['default'].createElement(_reactBootstrap.Input, { type: 'text', label: 'Name', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
-	            value: props.attrLabel, onChange: props.onAttrLabelChanged }),
-	          _react2['default'].createElement(
-	            _reactBootstrap.Input,
-	            { type: 'select', label: 'Attribute Type', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
-	              value: props.attrType, onChange: props.onAttrTypeChanged },
+	        var cardClasses = _react2['default'].addons.classSet({
+	            'card': true,
+	            'expanded': this.props.expanded
+	        });
+	        var contentClasses = _react2['default'].addons.classSet({
+	            'card-content': true,
+	            'hidden': !this.props.expanded
+	        });
+	        return _react2['default'].createElement(
+	            'div',
+	            { className: cardClasses },
 	            _react2['default'].createElement(
-	              'option',
-	              { value: 'QUANTITATIVE' },
-	              'Quantitative'
+	                'div',
+	                { className: 'btn btn-xs btn-default card-anchor card-move' },
+	                _react2['default'].createElement('span', { className: 'icon glyphicon glyphicon-move' })
 	            ),
 	            _react2['default'].createElement(
-	              'option',
-	              { value: 'CATEGORICAL' },
-	              'Categorical'
+	                'div',
+	                { className: 'card-header', onClick: function (ev) {
+	                        _this.props.onHeaderClick(ev);
+	                    } },
+	                _react2['default'].createElement(
+	                    'span',
+	                    { className: 'card-title' },
+	                    props.order + ".- " + props.attrLabel
+	                ),
+	                _react2['default'].createElement(
+	                    'span',
+	                    { className: 'pull-right text-muted' },
+	                    ' ',
+	                    _lodash2['default'].startCase(props.attrType.toLowerCase()),
+	                    '  '
+	                )
 	            ),
 	            _react2['default'].createElement(
-	              'option',
-	              { value: 'ORDINAL' },
-	              'Ordinal'
+	                'div',
+	                { className: contentClasses },
+	                _react2['default'].createElement(
+	                    'form',
+	                    { className: 'form-horizontal', onSubmit: function (ev) {
+	                            ev.preventDefault();
+	                        } },
+	                    _react2['default'].createElement(_reactBootstrap.Input, { type: 'text', label: 'Name', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
+	                        value: props.attrLabel, onChange: props.onAttrLabelChanged }),
+	                    _react2['default'].createElement(
+	                        _reactBootstrap.Input,
+	                        { type: 'select', label: 'Attribute Type', labelClassName: 'col-xs-2', wrapperClassName: 'col-xs-10',
+	                            value: props.attrType, onChange: props.onAttrTypeChanged },
+	                        _react2['default'].createElement(
+	                            'option',
+	                            { value: 'QUANTITATIVE' },
+	                            'Quantitative'
+	                        ),
+	                        _react2['default'].createElement(
+	                            'option',
+	                            { value: 'CATEGORICAL' },
+	                            'Categorical'
+	                        ),
+	                        _react2['default'].createElement(
+	                            'option',
+	                            { value: 'ORDINAL' },
+	                            'Ordinal'
+	                        )
+	                    )
+	                )
 	            )
-	          )
-	        )
-	      )
-	    );
-	  }
+	        );
+	    }
 	});
 	
 	exports['default'] = Card;
@@ -29440,13 +29452,19 @@
 	function cards(state, action) {
 	    if (state === undefined) state = {};
 	
+	    var attrState = null;
 	    switch (action.type) {
 	        case _actions.TOGGLE_CARD_EXPANSION:
-	            return _lodash2['default'].assign({}, state, _defineProperty({}, action.cardKey, { expanded: !state[action.cardKey]['expanded'] }));
+	            attrState = _lodash2['default'].assign({}, state[action.cardKey], { expanded: !state[action.cardKey]['expanded'] });
+	            return _lodash2['default'].assign({}, state, _defineProperty({}, action.cardKey, attrState));
+	        case _actions.SET_CARD_HEIGHT:
+	            attrState = _lodash2['default'].assign({}, state[action.cardKey], { height: action.height });
+	            return _lodash2['default'].assign({}, state, _defineProperty({}, action.cardKey, attrState));
 	        case _actions.INIT_CARDS:
 	            var expandedByDefault = false;
+	            var cardHeightDefault = 1;
 	            var names = _lodash2['default'].keys(action.attributes);
-	            return _lodash2['default'].zipObject(names, _lodash2['default'].fill(Array(names.length), { 'expanded': expandedByDefault }));
+	            return _lodash2['default'].zipObject(names, _lodash2['default'].fill(Array(names.length), { 'expanded': expandedByDefault, 'height': cardHeightDefault }));
 	        default:
 	            return state;
 	    }

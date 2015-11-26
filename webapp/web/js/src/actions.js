@@ -1,10 +1,11 @@
 import Context from 'context';
 
 export const SET_ORDER = 'SET_ORDER';
-export const TOGGLE_CARD_EXPANSION = 'TOGGLE_CARD_EXPANSION';
 export const SET_ATTR_LABEL = 'SET_ATTR_LABEL';
 export const SET_ATTR_TYPE = 'SET_ATTR_TYPE';
 export const FILL_FROM_SCHEMA = 'FILL_FROM_SCHEMA';
+export const TOGGLE_CARD_EXPANSION = 'TOGGLE_CARD_EXPANSION';
+export const SET_CARD_HEIGHT = 'SET_CARD_HEIGHT';
 export const INIT_CARDS = 'INIT_CARDS';
 export const DISMISS_MSG = 'DISMISS_MSG';
 
@@ -34,6 +35,10 @@ export function setOrder(order) {
 
 export function toggleCardExpansion(cardKey) {
     return {type: TOGGLE_CARD_EXPANSION, cardKey};
+}
+
+export function setCardHeight(cardKey, height) {
+    return {type: SET_CARD_HEIGHT, cardKey, height};
 }
 
 export function initCards(attributes) {

@@ -2,6 +2,7 @@ import {combineReducers} from 'redux';
 import _ from "lodash";
 import {SET_ORDER, SET_ATTR_LABEL, SET_ATTR_TYPE,
     TOGGLE_CARD_EXPANSION, FILL_FROM_SCHEMA, INIT_CARDS, DISMISS_MSG,
+    SET_CARD_HEIGHT,
     LOAD_TABLE_REQUEST, LOAD_TABLE_FAILURE, LOAD_TABLE_SUCCESS,
     RENAME_COLUMNS_REQUEST, RENAME_COLUMNS_FAILURE, RENAME_COLUMNS_SUCCESS,
     CREATE_NEW_TABLE_REQUEST, CREATE_NEW_TABLE_FAILURE, CREATE_NEW_TABLE_SUCCESS,
@@ -37,13 +38,19 @@ function attributes(state = {}, action) {
 }
 
 function cards(state={}, action) {
+    let attrState = null;
     switch (action.type) {
         case TOGGLE_CARD_EXPANSION:
-            return _.assign({}, state, {[action.cardKey] : {expanded: ! state[action.cardKey]['expanded']}});
+            attrState = _.assign({}, state[action.cardKey], {expanded: ! state[action.cardKey]['expanded']});
+            return _.assign({}, state, {[action.cardKey] : attrState});
+        case SET_CARD_HEIGHT:
+            attrState = _.assign({}, state[action.cardKey], {height: action.height});
+            return _.assign({}, state, {[action.cardKey] : attrState});
         case INIT_CARDS:
-            let expandedByDefault = false;
-            let names = _.keys(action.attributes);
-            return _.zipObject(names, _.fill(Array(names.length), {'expanded': expandedByDefault}));
+            const expandedByDefault = false;
+            const cardHeightDefault = 1;
+            const names = _.keys(action.attributes);
+            return _.zipObject(names, _.fill(Array(names.length), {'expanded': expandedByDefault, 'height': cardHeightDefault}));
         default:
             return state;
     }
