@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import { ActionCreators } from 'redux-undo';
 
 import {setOrder, toggleCardExpansion, setAttrLabel, setAttrType, setAttrOrder,
-    fetchDistinctValues} from './actions';
+    fetchDistinctValues, setCardHeight} from './actions';
 import Card from './card';
 import ToolBar from './toolbar';
 
@@ -35,14 +35,19 @@ const Editor = React.createClass({
         this.props.dispatch(setAttrType(attrName, attrType));
         if (attrType === "ORDINAL") {
             this.props.dispatch(fetchDistinctValues(tableName, attrName))
-            .then((action) => this.props.dispatch(setAttrOrder(attrName, action.values)));
+            .then((action) => {
+                this.props.dispatch(setAttrOrder(attrName, action.values))
+                const cardHeight = Math.ceil(action.values.length / 25) + 2;
+                this.props.dispatch(setCardHeight(attrName, cardHeight));
+            });
         } else { // Only ORDINAL attributes have order
+            this.props.dispatch(setCardHeight(attrName, 2));
             this.props.dispatch(setAttrOrder(attrName, null));
         }
     },
     render() {
         const rowHeight = 45;
-        const expandedRows = 5;
+        const expandedRows = 2;
         const dispatch = this.props.dispatch;
         const cards = this.props.cards.present;
         const attributes = this.props.attributes.present.attrsByName;
@@ -99,7 +104,9 @@ const Editor = React.createClass({
                                         expanded={cards[attrName].expanded}
                                         onAttrLabelChanged={(ev) => dispatch(setAttrLabel(attrName, ev.target.value))}
                                         onAttrTypeChanged={(ev) => this.onAttrTypeChanged(attrName, ev.target.value)}
-                                        onHeaderClick={() => dispatch(toggleCardExpansion(attrName)) }/>
+                                        onHeaderClick={() => dispatch(toggleCardExpansion(attrName))}
+                                        onAttrOrderChanged={(order) => {dispatch(setAttrOrder(attrName, order))}}
+                                        />
                                 </div>
                             );
                         })

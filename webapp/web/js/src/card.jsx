@@ -3,11 +3,20 @@ import _ from 'lodash';
 import {Button, ButtonToolbar, Input} from 'react-bootstrap';
 import OrderedFlowList from './orderedFlowList';
 
+
+function completeOrder(a, b) {
+    if (_.isFinite(a) && _.isFinite(b)) {return a - b;}
+    if (_.isFinite(a) && !_.isFinite(b)) {return -1;}
+    if (!_.isFinite(a) && _.isFinite(b)) {return 1;}
+    return (a < b) ? -1 : 1;
+}
+
 const Card = React.createClass({
     PropTypes : {
         onHeaderClick: PropTypes.func.isRequired,
         onAttrLabelChanged: PropTypes.func.isRequired,
         onAttrTypeChanged: PropTypes.func.isRequired,
+        onAttrOrderChanged: PropTypes.func.isRequired,
         attrLabel: PropTypes.string.isRequired,
         attrType: PropTypes.string.isRequired,
         attrOrder: PropTypes.array,
@@ -53,7 +62,23 @@ const Card = React.createClass({
                         </Input>
                     </form>
 
-                    <OrderedFlowList values={attrOrder}></OrderedFlowList>
+                    <OrderedFlowList values={attrOrder}
+                        onAscending={() => {
+                            let newOrder = _.clone(attrOrder).sort(completeOrder);
+                            props.onAttrOrderChanged(newOrder) 
+                        }}
+                        onDescending={() => {
+                            let newOrder = _.clone(attrOrder).sort(completeOrder).reverse();
+                            props.onAttrOrderChanged(newOrder)
+                        }}
+                        onShift={(oldIndex, newIndex) => {
+                            let newOrder = _.clone(attrOrder);
+                            let a = newOrder[newIndex];
+                            newOrder[newIndex] = newOrder[oldIndex];
+                            newOrder[oldIndex] = a;
+                            props.onAttrOrderChanged(newOrder);
+                        }}
+                    />
                 </div>
             </div>
         )

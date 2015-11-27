@@ -81,23 +81,23 @@
 	
 	var _editor2 = _interopRequireDefault(_editor);
 	
-	var _loader = __webpack_require__(/*! ./loader */ 347);
+	var _loader = __webpack_require__(/*! ./loader */ 348);
 	
 	var _loader2 = _interopRequireDefault(_loader);
 	
-	var _launcher = __webpack_require__(/*! ./launcher */ 351);
+	var _launcher = __webpack_require__(/*! ./launcher */ 352);
 	
 	var _launcher2 = _interopRequireDefault(_launcher);
 	
 	var _redux = __webpack_require__(/*! redux */ 55);
 	
-	var _reduxThunk = __webpack_require__(/*! redux-thunk */ 353);
+	var _reduxThunk = __webpack_require__(/*! redux-thunk */ 354);
 	
 	var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
 	
 	var _reactRedux = __webpack_require__(/*! react-redux */ 47);
 	
-	var _reducers = __webpack_require__(/*! ./reducers */ 354);
+	var _reducers = __webpack_require__(/*! ./reducers */ 355);
 	
 	var _reducers2 = _interopRequireDefault(_reducers);
 	
@@ -25403,7 +25403,7 @@
 	
 	var _card2 = _interopRequireDefault(_card);
 	
-	var _toolbar = __webpack_require__(/*! ./toolbar */ 346);
+	var _toolbar = __webpack_require__(/*! ./toolbar */ 347);
 	
 	var _toolbar2 = _interopRequireDefault(_toolbar);
 	
@@ -25436,10 +25436,13 @@
 	        this.props.dispatch((0, _actions.setAttrType)(attrName, attrType));
 	        if (attrType === "ORDINAL") {
 	            this.props.dispatch((0, _actions.fetchDistinctValues)(tableName, attrName)).then(function (action) {
-	                return _this.props.dispatch((0, _actions.setAttrOrder)(attrName, action.values));
+	                _this.props.dispatch((0, _actions.setAttrOrder)(attrName, action.values));
+	                var cardHeight = Math.ceil(action.values.length / 25) + 2;
+	                _this.props.dispatch((0, _actions.setCardHeight)(attrName, cardHeight));
 	            });
 	        } else {
 	            // Only ORDINAL attributes have order
+	            this.props.dispatch((0, _actions.setCardHeight)(attrName, 2));
 	            this.props.dispatch((0, _actions.setAttrOrder)(attrName, null));
 	        }
 	    },
@@ -25447,7 +25450,7 @@
 	        var _this2 = this;
 	
 	        var rowHeight = 45;
-	        var expandedRows = 5;
+	        var expandedRows = 2;
 	        var dispatch = this.props.dispatch;
 	        var cards = this.props.cards.present;
 	        var attributes = this.props.attributes.present.attrsByName;
@@ -25519,7 +25522,11 @@
 	                            },
 	                            onHeaderClick: function () {
 	                                return dispatch((0, _actions.toggleCardExpansion)(attrName));
-	                            } })
+	                            },
+	                            onAttrOrderChanged: function (order) {
+	                                dispatch((0, _actions.setAttrOrder)(attrName, order));
+	                            }
+	                        })
 	                    );
 	                })
 	            )
@@ -28590,9 +28597,22 @@
 	
 	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 66);
 	
-	var _orderedFlowList = __webpack_require__(/*! ./orderedFlowList */ 355);
+	var _orderedFlowList = __webpack_require__(/*! ./orderedFlowList */ 346);
 	
 	var _orderedFlowList2 = _interopRequireDefault(_orderedFlowList);
+	
+	function completeOrder(a, b) {
+	    if (_lodash2['default'].isFinite(a) && _lodash2['default'].isFinite(b)) {
+	        return a - b;
+	    }
+	    if (_lodash2['default'].isFinite(a) && !_lodash2['default'].isFinite(b)) {
+	        return -1;
+	    }
+	    if (!_lodash2['default'].isFinite(a) && _lodash2['default'].isFinite(b)) {
+	        return 1;
+	    }
+	    return a < b ? -1 : 1;
+	}
 	
 	var Card = _react2['default'].createClass({
 	    displayName: 'Card',
@@ -28601,6 +28621,7 @@
 	        onHeaderClick: _react.PropTypes.func.isRequired,
 	        onAttrLabelChanged: _react.PropTypes.func.isRequired,
 	        onAttrTypeChanged: _react.PropTypes.func.isRequired,
+	        onAttrOrderChanged: _react.PropTypes.func.isRequired,
 	        attrLabel: _react.PropTypes.string.isRequired,
 	        attrType: _react.PropTypes.string.isRequired,
 	        attrOrder: _react.PropTypes.array,
@@ -28685,7 +28706,23 @@
 	                        )
 	                    )
 	                ),
-	                _react2['default'].createElement(_orderedFlowList2['default'], { values: attrOrder })
+	                _react2['default'].createElement(_orderedFlowList2['default'], { values: attrOrder,
+	                    onAscending: function () {
+	                        var newOrder = _lodash2['default'].clone(attrOrder).sort(completeOrder);
+	                        props.onAttrOrderChanged(newOrder);
+	                    },
+	                    onDescending: function () {
+	                        var newOrder = _lodash2['default'].clone(attrOrder).sort(completeOrder).reverse();
+	                        props.onAttrOrderChanged(newOrder);
+	                    },
+	                    onShift: function (oldIndex, newIndex) {
+	                        var newOrder = _lodash2['default'].clone(attrOrder);
+	                        var a = newOrder[newIndex];
+	                        newOrder[newIndex] = newOrder[oldIndex];
+	                        newOrder[oldIndex] = a;
+	                        props.onAttrOrderChanged(newOrder);
+	                    }
+	                })
 	            )
 	        );
 	    }
@@ -28696,6 +28733,131 @@
 
 /***/ },
 /* 346 */
+/*!*****************************!*\
+  !*** ./orderedFlowList.jsx ***!
+  \*****************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 66);
+	
+	var OrderedFlowList = (function (_React$Component) {
+	    _inherits(OrderedFlowList, _React$Component);
+	
+	    function OrderedFlowList() {
+	        _classCallCheck(this, OrderedFlowList);
+	
+	        _get(Object.getPrototypeOf(OrderedFlowList.prototype), 'constructor', this).apply(this, arguments);
+	    }
+	
+	    _createClass(OrderedFlowList, [{
+	        key: 'render',
+	        value: function render() {
+	            var _props = this.props;
+	            var values = _props.values;
+	            var onShift = _props.onShift;
+	            var onAscending = _props.onAscending;
+	            var onDescending = _props.onDescending;
+	
+	            var visible = values.length === 0 ? " hidden" : "";
+	            return _react2['default'].createElement(
+	                'div',
+	                { className: "row" + visible },
+	                _react2['default'].createElement(
+	                    'div',
+	                    { className: 'col-sm-2' },
+	                    _react2['default'].createElement(
+	                        _reactBootstrap.ButtonGroup,
+	                        { bsSize: 'xsmall', vertical: true, block: true },
+	                        _react2['default'].createElement(
+	                            _reactBootstrap.Button,
+	                            { onClick: function () {
+	                                    return onAscending();
+	                                } },
+	                            ' Ascending '
+	                        ),
+	                        _react2['default'].createElement(
+	                            _reactBootstrap.Button,
+	                            { onClick: function () {
+	                                    return onDescending();
+	                                } },
+	                            ' Descending '
+	                        )
+	                    )
+	                ),
+	                _react2['default'].createElement(
+	                    'div',
+	                    { className: 'col-sm-10' },
+	                    _react2['default'].createElement(
+	                        _reactBootstrap.ButtonToolbar,
+	                        null,
+	                        values.map(function (value, i) {
+	                            return _react2['default'].createElement(
+	                                _reactBootstrap.ButtonGroup,
+	                                { key: "k" + i, bsSize: 'xsmall' },
+	                                _react2['default'].createElement(
+	                                    _reactBootstrap.Button,
+	                                    { onClick: function () {
+	                                            return onShift(i, Math.max(i - 1, 0));
+	                                        } },
+	                                    ' - '
+	                                ),
+	                                _react2['default'].createElement(
+	                                    _reactBootstrap.Button,
+	                                    { disabled: true, style: { opacity: 1 } },
+	                                    _react2['default'].createElement(
+	                                        'span',
+	                                        { className: 'text-muted' },
+	                                        i + 1 + ": "
+	                                    ),
+	                                    _react2['default'].createElement(
+	                                        'span',
+	                                        null,
+	                                        value
+	                                    )
+	                                ),
+	                                _react2['default'].createElement(
+	                                    _reactBootstrap.Button,
+	                                    { onClick: function () {
+	                                            return onShift(i, Math.min(i + 1, values.length - 1));
+	                                        } },
+	                                    ' + '
+	                                )
+	                            );
+	                        })
+	                    )
+	                )
+	            );
+	        }
+	    }]);
+	
+	    return OrderedFlowList;
+	})(_react2['default'].Component);
+	
+	exports['default'] = OrderedFlowList;
+	module.exports = exports['default'];
+
+/***/ },
+/* 347 */
 /*!*********************!*\
   !*** ./toolbar.jsx ***!
   \*********************/
@@ -28782,7 +28944,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 347 */
+/* 348 */
 /*!********************!*\
   !*** ./loader.jsx ***!
   \********************/
@@ -28818,17 +28980,17 @@
 	
 	var _remote2 = _interopRequireDefault(_remote);
 	
-	var _path = __webpack_require__(/*! path */ 348);
+	var _path = __webpack_require__(/*! path */ 349);
 	
 	var _path2 = _interopRequireDefault(_path);
 	
 	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 66);
 	
-	var _fileDropper = __webpack_require__(/*! ./fileDropper */ 349);
+	var _fileDropper = __webpack_require__(/*! ./fileDropper */ 350);
 	
 	var _fileDropper2 = _interopRequireDefault(_fileDropper);
 	
-	var _datasetList = __webpack_require__(/*! ./datasetList */ 350);
+	var _datasetList = __webpack_require__(/*! ./datasetList */ 351);
 	
 	var _datasetList2 = _interopRequireDefault(_datasetList);
 	
@@ -28956,7 +29118,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 348 */
+/* 349 */
 /*!***********************!*\
   !*** external "path" ***!
   \***********************/
@@ -28965,7 +29127,7 @@
 	module.exports = require("path");
 
 /***/ },
-/* 349 */
+/* 350 */
 /*!*************************!*\
   !*** ./fileDropper.jsx ***!
   \*************************/
@@ -29059,7 +29221,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 350 */
+/* 351 */
 /*!*************************!*\
   !*** ./datasetList.jsx ***!
   \*************************/
@@ -29164,7 +29326,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 351 */
+/* 352 */
 /*!**********************!*\
   !*** ./launcher.jsx ***!
   \**********************/
@@ -29202,11 +29364,11 @@
 	
 	var _reactBootstrap = __webpack_require__(/*! react-bootstrap */ 66);
 	
-	var _path = __webpack_require__(/*! path */ 348);
+	var _path = __webpack_require__(/*! path */ 349);
 	
 	var _path2 = _interopRequireDefault(_path);
 	
-	var _testedListItem = __webpack_require__(/*! ./testedListItem */ 352);
+	var _testedListItem = __webpack_require__(/*! ./testedListItem */ 353);
 	
 	var _testedListItem2 = _interopRequireDefault(_testedListItem);
 	
@@ -29333,7 +29495,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 352 */
+/* 353 */
 /*!****************************!*\
   !*** ./testedListItem.jsx ***!
   \****************************/
@@ -29413,7 +29575,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 353 */
+/* 354 */
 /*!*************************************************************************!*\
   !*** /home/crispamares/cbb/lobby/webapp/web/~/redux-thunk/lib/index.js ***!
   \*************************************************************************/
@@ -29438,7 +29600,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 354 */
+/* 355 */
 /*!*********************!*\
   !*** ./reducers.js ***!
   \*********************/
@@ -29512,7 +29674,7 @@
 	            return _lodash2['default'].assign({}, state, _defineProperty({}, action.cardKey, attrState));
 	        case _actions.INIT_CARDS:
 	            var expandedByDefault = false;
-	            var cardHeightDefault = 1;
+	            var cardHeightDefault = 2;
 	            var names = _lodash2['default'].keys(action.attributes);
 	            return _lodash2['default'].zipObject(names, _lodash2['default'].fill(Array(names.length), { 'expanded': expandedByDefault, 'height': cardHeightDefault }));
 	        default:
@@ -29589,67 +29751,6 @@
 	});
 	exports['default'] = editorReducer;
 	module.exports = exports['default'];
-
-/***/ },
-/* 355 */
-/*!*****************************!*\
-  !*** ./orderedFlowList.jsx ***!
-  \*****************************/
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-	
-	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var OrderedFlowList = (function (_React$Component) {
-	    _inherits(OrderedFlowList, _React$Component);
-	
-	    function OrderedFlowList() {
-	        _classCallCheck(this, OrderedFlowList);
-	
-	        _get(Object.getPrototypeOf(OrderedFlowList.prototype), "constructor", this).apply(this, arguments);
-	    }
-	
-	    _createClass(OrderedFlowList, [{
-	        key: "render",
-	        value: function render() {
-	            var values = this.props.values;
-	            console.log("--->", values);
-	            return _react2["default"].createElement(
-	                "div",
-	                null,
-	                values.map(function (value, i) {
-	                    return _react2["default"].createElement(
-	                        "span",
-	                        null,
-	                        i + 1 + ". " + value
-	                    );
-	                })
-	            );
-	        }
-	    }]);
-	
-	    return OrderedFlowList;
-	})(_react2["default"].Component);
-	
-	exports["default"] = OrderedFlowList;
-	module.exports = exports["default"];
 
 /***/ }
 /******/ ]);

@@ -51,7 +51,7 @@ function cards(state={}, action) {
             return _.assign({}, state, {[action.cardKey] : attrState});
         case INIT_CARDS:
             const expandedByDefault = false;
-            const cardHeightDefault = 1;
+            const cardHeightDefault = 2;
             const names = _.keys(action.attributes);
             return _.zipObject(names, _.fill(Array(names.length), {'expanded': expandedByDefault, 'height': cardHeightDefault}));
         default:
